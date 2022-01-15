@@ -1,5 +1,6 @@
-import { LifeCycleObject } from './LifeCycleObject';
 import { IReactionDisposer, reaction, runInAction } from 'mobx';
+import { pullAt } from 'lodash';
+import { LifeCycleObject } from './LifeCycleObject';
 
 /**
  * Object which helps manage reacting to Observable reactions, should be the base class for items that deal with Mobx
@@ -41,10 +42,32 @@ export abstract class ObservableReactionContainer extends LifeCycleObject {
   }
 
   protected onEnd() {
-    this.reactions.forEach((disposer) => {
+    this.removeAllReactions();
+  }
+
+  // this returns an index that can be used to clear a reaction later
+  // via the clearReaction function.
+  addReaction(reaction: IReactionDisposer): number {
+    return this.reactions.push(reaction) - 1;
+  }
+
+  removeReaction(idx: number): void {
+    if (idx > -1 && idx < this.reactions.length) {
+      const disposer = this.reactions[idx];
       disposer();
-    });
+      pullAt(this.reactions, idx);
+    }
+  }
+
+  removeAllReactions(): void {
+    for (const reactionDisposer of this.reactions) {
+      reactionDisposer();
+    }
     this.reactions = [];
+  }
+
+  get reactionsCount(): number {
+    return this.reactions.length;
   }
 }
 
