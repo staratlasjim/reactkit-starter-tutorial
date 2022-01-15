@@ -1,0 +1,78 @@
+import { LifeCycleObject } from './LifeCycleObject';
+import { IReactionDisposer, reaction, runInAction } from 'mobx';
+
+/**
+ * Object which helps manage reacting to Observable reactions, should be the base class for items that deal with Mobx
+ * reactions and autorun code.
+ *
+ * This is primarily to reduce memory leaks by having Mobx object reaction code keeping an object alive after is should
+ * be removed.
+ *
+ * An example:
+ *  View Model Observer which uses a reaction then forgets to call the disposer
+ *
+ *  export class WalletViewModel {
+ *      const { connected, getBalances } = useDependency<WalletModel>(WalletModel);
+ *
+ *      onInitialize() {
+ *       // HERE IS THE BUG
+ *          reaction(
+ *            ()=>connected,
+ *            ()=> {
+ *                if(connected) getBalances();
+ *            })
+ *      }
+ *  }
+ *
+ *  In the above code, even after the WalletViewModel is no longer used by the React View, Mobx will hold a pointer to
+ *  it via the reaction() method call.  The JavaScript GC will be able to trace, through Mobx, to this object and will
+ *  not GC it.  Also, anytime wallet changes, this object will execute the effect code and might cause all kinds of
+ *  issues down the road.
+ *
+ *  This object resolves this by keeping track of IReactionDisposers and then making sure the are executed, which
+ *  frees up the reference in Mobx.
+ */
+export abstract class ObservableReactionContainer extends LifeCycleObject {
+  protected reactions: Array<IReactionDisposer>;
+
+  constructor() {
+    super();
+    this.reactions = [];
+  }
+
+  protected onEnd() {
+    this.reactions.forEach((disposer) => {
+      disposer();
+    });
+    this.reactions = [];
+  }
+}
+
+/**
+ * Some helper functions for dealing with Mobx
+ */
+export function delayedAction(expression: () => void, delayInMs: number): void {
+  setTimeout(() => {
+    runInAction(() => {
+      expression();
+    });
+  }, delayInMs);
+}
+
+export async function awaitReaction<T>(
+  expression: (r: any) => T,
+  effect: (arg: T, prev: T, r: any) => void,
+  opts: any = {}
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const disposer = reaction(
+      expression,
+      (arg, prev, r) => {
+        effect(arg, prev, r);
+        disposer();
+        resolve(true);
+      },
+      opts
+    );
+  });
+}

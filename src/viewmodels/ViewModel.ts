@@ -1,3 +1,3 @@
-import { ReactionContainer } from '../core/ReactionContainer';
+import { ObservableReactionContainer } from '../core/ObservableReactionContainer';
 
-export abstract class ViewModel extends ReactionContainer {}
+export abstract class ViewModel extends ObservableReactionContainer {}

@@ -1,3 +1,7 @@
+/**
+ * Object which helps manage life cycle calls, should be the base class for items that deal with life cycles, such
+ * as React view life cycle, or network life cycle class.
+ */
 export abstract class LifeCycleObject {
   protected initGuard = 0;
 
