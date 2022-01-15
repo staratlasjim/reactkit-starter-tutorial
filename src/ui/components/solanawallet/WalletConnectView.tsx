@@ -7,13 +7,13 @@ import {
 } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
 import { observer } from 'mobx-react-lite';
-import { WalletViewModel } from '../../viewmodels/WalletViewModel/WalletViewModel';
-import { useViewModel } from '../../viewmodels/useViewModel';
+import { WalletViewModel } from '../../../viewmodels/WalletViewModel/WalletViewModel';
+import { useViewModel } from '../../../viewmodels/useViewModel';
 
 // Default styles that can be overridden by your app
 require('@solana/wallet-adapter-react-ui/styles.css');
 
-const WalletView: FC = ({ children }) => {
+export const WalletConnectView: FC = observer(({ children }) => {
   const wallet = useViewModel<WalletViewModel>(WalletViewModel);
   console.log('wallet: ', wallet);
   const network = wallet.network;
@@ -42,6 +42,4 @@ const WalletView: FC = ({ children }) => {
       </WalletProvider>
     </ConnectionProvider>
   );
-};
-
-export const Wallet = observer(WalletView);
+});

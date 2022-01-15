@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
 import Head from 'next/head';
-import { Wallet } from '../../components/solanawallet/Wallet';
-import { Text } from '../GlobalStyle.style';
+
+import { Text } from '../../GlobalStyle.style';
 import {
   AuthedContainer,
   HomeAuthCenterContainer,
@@ -12,6 +12,7 @@ import {
   HomePageHeaderContainer,
   HomePageHeaderSubText,
 } from './HomePageView.style';
+// import { WalletConnectView } from '../../components/solanawallet/WalletConnectView';
 
 export const HomePageView: FC = observer(() => {
   return (
@@ -34,9 +35,7 @@ export const HomePageView: FC = observer(() => {
             </HomePageHeaderSubText>
           </HomePageHeaderContainer>
           <HomeAuthCenterContainer>
-            <AuthedContainer>
-              <Wallet />
-            </AuthedContainer>
+            <AuthedContainer>{/*<WalletConnectView />*/}</AuthedContainer>
           </HomeAuthCenterContainer>
         </HomePageContainer>
       </main>

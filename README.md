@@ -39,4 +39,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 * Add Mobx-react-lite
 * Add Tsyringe
 * Add Jest
-* Add Solana Wallet Adaptors
+* Add Solana WalletConnectView Adaptors

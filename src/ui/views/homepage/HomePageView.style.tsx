@@ -1,4 +1,4 @@
-import { styled } from '../../../stitches.config';
+import { styled } from '../../../../stitches.config';
 
 export const HomePageContainer = styled('div', {
   height: '100%',

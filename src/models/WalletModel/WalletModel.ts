@@ -1,14 +1,9 @@
-import { DependencyContainer, instanceCachingFactory, Lifecycle, singleton } from 'tsyringe';
+import '@abraham/reflection';
+import { injectable, Lifecycle, scoped, singleton } from 'tsyringe';
 import { autorun, computed, makeObservable, observable, reaction, runInAction } from 'mobx';
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import {
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-  SolletExtensionWalletAdapter,
-  SolletWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
 import { PublicKey } from '@solana/web3.js';
-import { DependencyService } from '../../services/injection/DependencyContext';
+import { WalletAdaptorService } from '../../services/WalletAdaptorService/WalletAdaptorService';
 
 @singleton()
 export class WalletModel {
@@ -19,9 +14,9 @@ export class WalletModel {
 
   selectedAdaptor: Adapter | null = null;
 
-  constructor(network = WalletAdapterNetwork.Devnet) {
+  constructor(protected walletAdaptorService: WalletAdaptorService) {
     this.name = '';
-    this.network = network;
+    this.network = WalletAdapterNetwork.Devnet;
     this.publicKey = '';
     makeObservable(this, {
       name: observable,
@@ -62,13 +57,10 @@ export class WalletModel {
 
   protected setupAdaptors() {
     const { network } = this;
-    const newAdaptors = [
-      this.setUpAdaptor(new PhantomWalletAdapter()),
-      this.setUpAdaptor(new SolflareWalletAdapter()),
-      this.setUpAdaptor(new SolletWalletAdapter({ network })),
-      this.setUpAdaptor(new SolletExtensionWalletAdapter({ network })),
-    ];
 
+    const newAdaptors = this.walletAdaptorService
+      .getAdaptors(network)
+      .map((value) => this.setUpAdaptor(value));
     runInAction(() => {
       this.adaptors = newAdaptors;
     });
