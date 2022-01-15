@@ -3,6 +3,7 @@ import '@abraham/reflection';
 import { container, DependencyContainer, InjectionToken, Lifecycle } from 'tsyringe';
 import constructor from 'tsyringe/dist/typings/types/constructor';
 
+// TODO: deal with server vs client side context here
 //export const DependencyService = container;
 
 export class DependencyService {
@@ -12,6 +13,13 @@ export class DependencyService {
 
   static registerSingleton<T extends unknown>(token: constructor<T>): DependencyContainer {
     return container.registerSingleton(token);
+  }
+
+  static registerAsSingleton<T extends unknown>(
+    from: InjectionToken<T>,
+    to: InjectionToken<T>
+  ): DependencyService {
+    return container.registerSingleton(from, to);
   }
 
   static registerClass<T extends unknown>(token: constructor<T>): DependencyContainer {

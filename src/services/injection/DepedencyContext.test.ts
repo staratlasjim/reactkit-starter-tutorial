@@ -1,5 +1,6 @@
 import { DependencyService } from './DependencyContext';
-import { singleton } from 'tsyringe';
+import { injectable, singleton } from 'tsyringe';
+import { nanoid } from 'nanoid';
 
 describe('Should test Dependency Context correctly', function () {
   it('Dependency should register and retrieve values correctly', () => {
@@ -54,5 +55,44 @@ describe('Should test Dependency Context correctly', function () {
       `Foo1 value ${fooInstance1.value} should !== Foo2.value ${fooInstance2.value}`
     ).toBeTruthy();
     expect(fooInstance1 != fooInstance2, 'Foo1 should not eq Foo2').toBeTruthy();
+  });
+
+  it('DependencyService should work with decorators correctly', () => {
+    @singleton()
+    class SingletonBar {
+      value: string;
+      constructor() {
+        this.value = nanoid(5);
+      }
+    }
+
+    @injectable()
+    class InstanceBar {
+      value: string;
+      constructor() {
+        this.value = nanoid(5);
+      }
+    }
+    const barSingleton = DependencyService.resolve<SingletonBar>(SingletonBar);
+    expect(barSingleton, `SBar1 ${barSingleton} should exist`).toBeTruthy();
+
+    const barSingleton2 = DependencyService.resolve<SingletonBar>(SingletonBar);
+    expect(barSingleton2, `SBar2 ${barSingleton2} should exist`).toBeTruthy();
+    expect(
+      barSingleton.value === barSingleton2.value,
+      `SBar1 value ${barSingleton.value} should !== SBar2.value ${barSingleton2.value}`
+    ).toBeTruthy();
+    expect(barSingleton == barSingleton, 'SBar1 should not eq SBar2').toBeTruthy();
+
+    const bar = DependencyService.resolve<InstanceBar>(InstanceBar);
+    expect(bar, `bar ${bar} should exist`).toBeTruthy();
+
+    const bar2 = DependencyService.resolve<InstanceBar>(InstanceBar);
+    expect(bar2, `bar2 ${bar2} should exist`).toBeTruthy();
+    expect(
+      bar.value != bar2.value,
+      `bar value ${bar.value} should !== bar2.value ${bar2.value}`
+    ).toBeTruthy();
+    expect(bar != bar2, 'bar should not eq bar2').toBeTruthy();
   });
 });

@@ -1,13 +1,14 @@
 import type { AppProps } from 'next/app';
-import { Wallet } from '../components/solanawallet/Wallet';
 import DependencyContext, { DependencyService } from '../services/injection/DependencyContext';
+
+import { enableStaticRendering } from 'mobx-react-lite';
+// there is no window object on the server
+enableStaticRendering(typeof window === 'undefined');
 
 function NftMeApp({ Component, pageProps }: AppProps) {
   return (
     <DependencyContext.Provider value={DependencyService.container()}>
-      <Wallet>
-        <Component {...pageProps} />
-      </Wallet>
+      <Component {...pageProps} />
     </DependencyContext.Provider>
   );
 }
