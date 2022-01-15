@@ -12,9 +12,10 @@ export const HomePageContainer = styled('div', {
 
 export const AuthedContainer = styled('div', {
   height: '100%',
+  width: '400px',
+  maxWidth: '400px',
   display: 'flex',
   flexDirection: 'column',
-  margin: '30px',
 });
 
 export const HomePageHeaderContainer = styled('div', {});
@@ -39,9 +40,10 @@ export const HomePageGradientText = styled('span', {
 
 export const HomeAuthCenterContainer = styled('div', {
   display: 'flex',
-  flexFlow: 'row wrap',
-  width: '300px',
-  margin: '0px auto',
+  flexFlow: 'row',
+  width: '100%',
+  alignItems: 'center',
+  justifyContent: 'center',
 
   '> *': {
     padding: '10px',
