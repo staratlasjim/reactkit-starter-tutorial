@@ -1,5 +1,5 @@
 import '@abraham/reflection';
-import { injectable, Lifecycle, scoped, singleton } from 'tsyringe';
+import { singleton } from 'tsyringe';
 import { Adapter } from '@solana/wallet-adapter-base';
 import {
   PhantomWalletAdapter,
