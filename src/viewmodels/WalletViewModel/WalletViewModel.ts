@@ -19,8 +19,12 @@ export class WalletViewModel extends ViewModel {
     });
   }
 
-  protected onInitialize(): void {}
-  protected onEnd(): void {}
+  protected onInitialize(): void {
+    this.wallet.initialize();
+  }
+  protected onEnd(): void {
+    this.wallet.end();
+  }
 
   get name(): string {
     return this.wallet.name;

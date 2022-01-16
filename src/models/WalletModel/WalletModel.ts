@@ -4,9 +4,10 @@ import { autorun, computed, makeObservable, observable, reaction, runInAction } 
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { PublicKey } from '@solana/web3.js';
 import { WalletAdaptorService } from '../../services/WalletAdaptorService/WalletAdaptorService';
+import { Model } from '../Model';
 
 @singleton()
-export class WalletModel {
+export class WalletModel extends Model {
   name: string;
   publicKey: string;
   adaptors: Adapter[] = [];
@@ -15,6 +16,7 @@ export class WalletModel {
   selectedAdaptor: Adapter | null = null;
 
   constructor(protected walletAdaptorService: WalletAdaptorService) {
+    super();
     this.name = '';
     this.network = WalletAdapterNetwork.Devnet;
     this.publicKey = '';
@@ -29,38 +31,37 @@ export class WalletModel {
 
     this.onConnect = this.onConnect.bind(this);
     this.onDisconnect = this.onDisconnect.bind(this);
-
-    this.createReactions();
   }
 
   protected createReactions() {
-    autorun(() => {
-      if (this.network) {
-        this.setupAdaptors();
-      }
+    this.addReaction(
+      autorun(() => {
+        if (this.network) {
+          this.setupAdaptors();
+        }
+      })
+    );
+  }
+
+  protected onInitialize(): void {
+    this.createReactions();
+  }
+
+  protected onEnd() {
+    this.adaptors.forEach((adapter) => {
+      adapter.removeAllListeners('connect');
+      adapter.removeAllListeners('disconnect');
     });
-
-    const connectDs = reaction(
-      () => this.publicKey,
-      () => {
-        console.log(`~~~ public key changed: ${this.publicKey}`);
-      }
-    );
-
-    const connectDs1 = reaction(
-      () => this.connected,
-      () => {
-        console.log(`~~~ connected state: ${this.connected}`);
-      }
-    );
+    super.onEnd();
   }
 
   protected setupAdaptors() {
     const { network } = this;
 
-    const newAdaptors = this.walletAdaptorService
-      .getAdaptors(network)
-      .map((value) => this.setUpAdaptor(value));
+    const originalAdaptors = this.walletAdaptorService.getAdaptors(network);
+
+    const newAdaptors = originalAdaptors.map((value) => this.setUpAdaptor(value));
+
     runInAction(() => {
       this.adaptors = newAdaptors;
     });
