@@ -15,7 +15,6 @@ require('@solana/wallet-adapter-react-ui/styles.css');
 
 export const WalletConnectView: FC = observer(({ children }) => {
   const wallet = useViewModel<WalletViewModel>(WalletViewModel);
-  console.log('wallet: ', wallet);
   const network = wallet.network;
 
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);

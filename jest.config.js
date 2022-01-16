@@ -31,6 +31,7 @@ module.exports = {
   preset: 'ts-jest',
   moduleNameMapper: {
     '^src/(.*)': '<rootDir>/src/$1',
+    '^.+\\.(css|less)$': '<rootDir>/src/__mocks__/styleMock.ts',
   },
   resetMocks: true,
   clearMocks: true,
