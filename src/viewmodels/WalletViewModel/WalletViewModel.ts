@@ -5,7 +5,7 @@ import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ViewModel } from '../ViewModel';
 
 export class WalletViewModel extends ViewModel {
-  wallet: WalletModel;
+  protected wallet: WalletModel;
 
   constructor() {
     super();

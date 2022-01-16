@@ -1,14 +1,11 @@
 import { DependencyService } from '../../services/injection/DependencyContext';
 import { WalletModel } from './WalletModel';
-import { PublicKey } from '@solana/web3.js';
-import { Adapter } from '@solana/wallet-adapter-base';
 import {
   TestWalletAdaptor,
   TestWalletAdaptorName,
   TestWalletAdaptorService,
 } from '../../__test__/TestWalletAdaptor';
-import { awaitReaction, delayedAction } from '../../core/ObservableReactionContainer';
-import { publicKey } from '@solana/web3.js/src/layout';
+import { awaitReaction } from '../../core/ObservableReactionContainer';
 
 describe('WalletModel should work as expected', function () {
   beforeAll(() => {
