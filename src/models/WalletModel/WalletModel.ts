@@ -1,6 +1,6 @@
 import '@abraham/reflection';
 import { singleton } from 'tsyringe';
-import { autorun, computed, makeObservable, observable, reaction, runInAction } from 'mobx';
+import { autorun, makeObservable, observable, runInAction } from 'mobx';
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { PublicKey } from '@solana/web3.js';
 import { WalletAdaptorService } from '../../services/WalletAdaptorService/WalletAdaptorService';
