@@ -86,14 +86,14 @@ export async function awaitReaction<T>(
   expression: (r: any) => T,
   effect: (arg: T, prev: T, r: any) => void,
   opts: any = {}
-): Promise<boolean> {
+): Promise<T> {
   return new Promise((resolve) => {
     const disposer = reaction(
       expression,
       (arg, prev, r) => {
         effect(arg, prev, r);
         disposer();
-        resolve(true);
+        resolve(arg);
       },
       opts
     );

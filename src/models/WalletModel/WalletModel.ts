@@ -12,7 +12,7 @@ export class WalletModel extends Model {
   publicKey: string;
   adaptors: Adapter[] = [];
   network: WalletAdapterNetwork;
-
+  connected: boolean;
   selectedAdaptor: Adapter | null = null;
 
   constructor(protected walletAdaptorService: WalletAdaptorService) {
@@ -20,13 +20,14 @@ export class WalletModel extends Model {
     this.name = '';
     this.network = WalletAdapterNetwork.Devnet;
     this.publicKey = '';
+    this.connected = false;
     makeObservable(this, {
       name: observable,
       publicKey: observable,
       network: observable,
+      connected: observable,
       adaptors: observable,
       selectedAdaptor: observable,
-      connected: computed,
     });
 
     this.onConnect = this.onConnect.bind(this);
@@ -70,7 +71,7 @@ export class WalletModel extends Model {
   protected onConnect(adaptor: Adapter, publicKey: PublicKey) {
     runInAction(() => {
       this.selectedAdaptor = adaptor;
-      console.log(`~~~~ RIA: onConnect: ${publicKey}`, adaptor);
+      this.connected = this.selectedAdaptor.connected;
       this.name = adaptor.name;
       this.publicKey = publicKey.toBase58();
     });
@@ -78,7 +79,7 @@ export class WalletModel extends Model {
 
   protected onDisconnect(adaptor: Adapter) {
     runInAction(() => {
-      this.selectedAdaptor = null;
+      this.connected = adaptor.connected;
       this.name = '';
       this.publicKey = '';
     });
@@ -86,22 +87,14 @@ export class WalletModel extends Model {
 
   protected setUpAdaptor(adaptor: Adapter): Adapter {
     adaptor.on('connect', (publicKey: PublicKey) => {
-      console.log(`~~~~ connect: ${publicKey}`);
       this.onConnect(adaptor, publicKey);
     });
     adaptor.on('disconnect', () => {
-      console.log(`~~~~ disconnect`);
       this.onDisconnect(adaptor);
     });
     if (adaptor.connected && adaptor.publicKey) {
       this.onConnect(adaptor, adaptor.publicKey);
     }
     return adaptor;
-  }
-
-  get connected(): boolean {
-    if (!this.selectedAdaptor) return false;
-
-    return this.selectedAdaptor.connected;
   }
 }
