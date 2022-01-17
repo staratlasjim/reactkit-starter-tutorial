@@ -12,9 +12,13 @@ import {
   HomePageHeaderContainer,
   HomePageHeaderSubText,
 } from './HomePageView.style';
-import { WalletConnectView } from '../../components/solanawallet/WalletConnectView';
+
+
+import {CandyMachineInfoView} from "../../components/candymachine/CandyMachineInfoView";
+import {WalletConnectView} from "../../components/walletconnect/WalletConnectView";
 
 export const HomePageView: FC = observer(() => {
+
   return (
     <div>
       <Head>
@@ -39,6 +43,7 @@ export const HomePageView: FC = observer(() => {
               <WalletConnectView />
             </AuthedContainer>
           </HomeAuthCenterContainer>
+          <CandyMachineInfoView />
         </HomePageContainer>
       </main>
 

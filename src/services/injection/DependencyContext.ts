@@ -42,4 +42,8 @@ export const useDependency = <T extends unknown>(token: InjectionToken<T>) => {
   return container.resolve(token) as T;
 };
 
+export const useDependencyContainer = (): DependencyContainer => {
+  return DependencyService.container();
+}
+
 export default DependencyContext;
