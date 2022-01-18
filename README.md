@@ -22,6 +22,7 @@ Those concepts are primarily used to implement [SOLID Design Principals](https:/
 * Uses [Tsyringe](https://github.com/microsoft/tsyringe) a Depedency Injection/IoC library developed by Microsoft, not the homemade one I developed for Portal
 - [Video 1](https://capture.dropbox.com/K6alm5GMjKJ27OVx): Overview of Unit Testing the UI and mocking the on-chain calls 
 - [Video 2](https://capture.dropbox.com/LDwgA8p6ox8duHHB): Overview of Unit Testing the UI and mocking the wallet adaptors
+- [Video 3](https://capture.dropbox.com/ogOmfo8hG9xnOq8z): Overview of TSyringe and DI containers in general
 
 Todo:
 * Add Stiches (https://stitches.dev/)
