@@ -21,7 +21,7 @@ export const useViewModel = <T extends ViewModel>(token: constructor<T>) => {
 
   useEffect(() => {
     return () => {
-      vm.end();
+      viewModel.end();
     };
   }, []);
 

@@ -1,15 +1,14 @@
 import { computed, makeObservable } from 'mobx';
 import { WalletModel } from '../../models/WalletModel/WalletModel';
-import { DependencyService } from '../../services/injection/DependencyContext';
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ViewModel } from '../ViewModel';
+import { injectable } from 'tsyringe';
 
+@injectable()
 export class WalletViewModel extends ViewModel {
-  protected wallet: WalletModel;
-
-  constructor() {
+  constructor(protected wallet: WalletModel) {
     super();
-    this.wallet = DependencyService.resolve(WalletModel);
+
     makeObservable(this, {
       connected: computed,
       name: computed,

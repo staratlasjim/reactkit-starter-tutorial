@@ -24,7 +24,23 @@ Those concepts are primarily used to implement [SOLID Design Principals](https:/
 - [Video 2](https://capture.dropbox.com/LDwgA8p6ox8duHHB): Overview of Unit Testing the UI and mocking the wallet adaptors
 - [Video 3](https://capture.dropbox.com/ogOmfo8hG9xnOq8z): Overview of TSyringe and DI containers in general
 
-Todo:
+## MVVM
+MVVM is really trying to enforce Single Responsibility and Substitution Principles. 
+Basically, the goal is to have our Core Business Logic is modeled in the Model Layer; so items like
+NFTs, Faction Fleets, Mining stations, Crafting Recipes, etc, etc, all have their primary code represented in
+Model objects. Then our View (UI) layer works with ViewModels to get the specific data and implement the screen specific
+logic. This ensures that each layer has a single responsibility:
+
+Responsibilities:
+- UI: Style and Layout only
+- ModelView: UI logic related to business logic lives here; validation, conversion, and other such UI logic goes here.
+- Model: The core business objects that define our Domain (NFTs, FactionFleets, etc, etc)
+
+Videos:
+- [Video 1](https://capture.dropbox.com/IpZFHpyfB1pUx6d7): Overview of WalletConnectView, WalletViewModel and WalletModel
+
+### Tutorial Todo:
+* more MVVM
 * Add Stiches (https://stitches.dev/)
 * Add Mobx-react-lite
 * Add Jest
