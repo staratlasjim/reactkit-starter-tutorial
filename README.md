@@ -19,9 +19,9 @@ Those concepts are primarily used to implement [SOLID Design Principals](https:/
 * Portal uses these principals in most of the app, but it isn't fully converted, there is a lot of left over code that doesn't fully utilze this style.
 
 ##Dependency Injection
-* Uses Tsyringe(https://github.com/microsoft/tsyringe) and not the homemade one I developed for Portal
-- [Video 1](https://capture.dropbox.com/K6alm5GMjKJ27OVx) 
-- [Video 2](https://capture.dropbox.com/LDwgA8p6ox8duHHB)
+* Uses [Tsyringe](https://github.com/microsoft/tsyringe) a Depedency Injection/IoC library developed by Microsoft, not the homemade one I developed for Portal
+- [Video 1](https://capture.dropbox.com/K6alm5GMjKJ27OVx): Overview of Unit Testing the UI and mocking the on-chain calls 
+- [Video 2](https://capture.dropbox.com/LDwgA8p6ox8duHHB): Overview of Unit Testing the UI and mocking the wallet adaptors
 
 Todo:
 * Add Stiches (https://stitches.dev/)
