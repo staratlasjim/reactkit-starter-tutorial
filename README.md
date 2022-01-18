@@ -1,4 +1,4 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app --typescript`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
 
@@ -33,8 +33,25 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
 
-## Tutorial
+# Tutorials
 
+Based on Buildspace's Solana NFT CandyMachine mint tutorial, but using ReactKit's
+concepts of Dependency Injection, Inversion of Control, Observables and MVVM.
+
+These are primarily used to implement [SOLID Design Principals](https://stackify.com/solid-design-principles/)
+
+* Single Responsibility Principle
+* Open/Closed Principle
+* Liskov Substitution Principle
+* Interface Segregation Principle
+* Dependency Inversion
+
+##Dependency Injection
+* Uses Tsyringe(https://github.com/microsoft/tsyringe) and not the homemade one I developed for Portal
+- [Video 1](https://capture.dropbox.com/K6alm5GMjKJ27OVx) 
+- [Video 2](https://capture.dropbox.com/LDwgA8p6ox8duHHB)
+
+Todo:
 * Add Stiches (https://stitches.dev/)
 * Add Mobx-react-lite
 * Add Tsyringe
