@@ -3,10 +3,11 @@ import { act, render } from '@testing-library/react';
 import { WalletModel } from '../../../models/WalletModel/WalletModel';
 import { DependencyService, useDependency } from '../../../services/injection/DependencyContext';
 import { MockWalletAdaptorService } from '../../../__mocks__/services/MockWalletAdaptor';
-import { HomePageView } from './HomePageView';
 import { MockCandyMachineModel } from '../../../__mocks__/models/candymachine/MockCandyMachineModel';
 import { CandyMachineModel } from '../../../models/CandyMachine/CandyMachineModel';
 import { DI_KEYS } from '../../../core/Constants';
+import { CandyMachineInfoView } from './CandyMachineInfoView';
+import { awaitReaction } from '../../../core/ObservableReactionContainer';
 
 describe('HomePageView should work as expected', function () {
   beforeAll(() => {
@@ -36,33 +37,58 @@ describe('HomePageView should work as expected', function () {
   });
 
   it('HomePageView should react to connect/disconnect by the Wallet', async () => {
-    // wallet is NOT connected yet
     const walletAdaptor = MockWalletAdaptorService.GetMockWalletAdaptor();
-    const { container, getByText } = render(<HomePageView />);
-    expect(container).toBeTruthy();
-
-    expect(getByText('Wallet connected: nope')).toBeInTheDocument();
     await act(async () => {
       await walletAdaptor.connect();
     });
 
+    const candyMachine = DependencyService.resolve<CandyMachineModel>(CandyMachineModel);
+    const { container, getByText } = render(<CandyMachineInfoView />);
+    expect(container).toBeTruthy();
+
+    //
     expect(
-      getByText('Wallet connected: yep'),
-      'wallet connected message should be there'
-    ).toBeInTheDocument();
-    expect(
-      getByText(`Wallet Name: ${walletAdaptor.name}`),
-      'wallet name should be in the component'
-    ).toBeInTheDocument();
-    expect(
-      getByText(`Public Key: ${walletAdaptor.publicKey?.toBase58()}`),
-      'wallet public should be in the component'
+      getByText(`Waiting for CM to initialize`),
+      'should be waiting for the CM to initialize'
     ).toBeInTheDocument();
 
+    await act(async () => {
+      await await awaitReaction(
+        () => candyMachine.isInitialized,
+        () => true
+      );
+    });
+
+    // should be initialized now!
+    expect(
+      getByText(`Candy Machine ID: ${candyMachine.candyMachineId}`),
+      'candy machine id should exist'
+    ).toBeInTheDocument();
+    expect(
+      getByText(`Items Available: ${candyMachine.itemsAvailable}`),
+      'itemsAvailable should be in the component'
+    ).toBeInTheDocument();
+    expect(
+      getByText(`Items Remaining: ${candyMachine.itemsRemaining}`),
+      'itemsRemaining should be in the component'
+    ).toBeInTheDocument();
+
+    expect(
+      getByText(`Items Redeemed: ${candyMachine.itemsRedeemed}`),
+      'itemsRedeemed should be in the component'
+    ).toBeInTheDocument();
+
+    expect(
+      getByText(`Go Live Date: ${candyMachine.goLiveDateTime}`),
+      'goLiveDateTime should be in the component'
+    ).toBeInTheDocument();
     await act(async () => {
       await walletAdaptor.disconnect();
     });
 
-    expect(getByText('Wallet connected: nope')).toBeInTheDocument();
+    expect(
+      getByText('Connect wallet with button above !!!!'),
+      'text informing user to connect wallet should be there'
+    ).toBeInTheDocument();
   });
 });

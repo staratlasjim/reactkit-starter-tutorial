@@ -2,15 +2,15 @@ import React from 'react';
 import { render, act, fireEvent } from '@testing-library/react';
 import { WalletModel } from '../../../models/WalletModel/WalletModel';
 import { DependencyService } from '../../../services/injection/DependencyContext';
-import { TestWalletAdaptorService } from '../../../__test__/TestWalletAdaptor';
+import { MockWalletAdaptorService } from '../../../__mocks__/services/MockWalletAdaptor';
 import { WalletConnectView } from './WalletConnectView';
 
 describe('WalletConnectView should work as expected', function () {
   beforeAll(() => {
-    TestWalletAdaptorService.SetTestAdaptorList();
+    MockWalletAdaptorService.SetTestAdaptorService();
   });
   afterAll(() => {
-    TestWalletAdaptorService.RestoreWalletAdaptorList();
+    MockWalletAdaptorService.RestoreWalletAdaptorService();
   });
 
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('WalletConnectView should work as expected', function () {
 
   it('WalletViewModel should react to connect/disconnect by the Wallet', async () => {
     // wallet is NOT connected yet
-    const walletAdaptor = TestWalletAdaptorService.GetTestWalletAdaptor();
+    const walletAdaptor = MockWalletAdaptorService.GetMockWalletAdaptor();
     const { container, getByText } = render(<WalletConnectView />);
     expect(container).toBeTruthy();
 

@@ -1,18 +1,18 @@
 import { DependencyService } from '../../services/injection/DependencyContext';
 import { WalletModel } from './WalletModel';
 import {
-  TestWalletAdaptor,
-  TestWalletAdaptorName,
-  TestWalletAdaptorService,
-} from '../../__test__/TestWalletAdaptor';
+  MockWalletAdaptor,
+  MockWalletAdaptorName,
+  MockWalletAdaptorService,
+} from '../../__mocks__/services/MockWalletAdaptor';
 import { awaitReaction } from '../../core/ObservableReactionContainer';
 
 describe('WalletModel should work as expected', function () {
   beforeAll(() => {
-    TestWalletAdaptorService.SetTestAdaptorList();
+    MockWalletAdaptorService.SetTestAdaptorService();
   });
   afterAll(() => {
-    TestWalletAdaptorService.RestoreWalletAdaptorList();
+    MockWalletAdaptorService.RestoreWalletAdaptorService();
   });
 
   beforeEach(() => {
@@ -35,15 +35,15 @@ describe('WalletModel should work as expected', function () {
     const walletAdaptor = walletModel.adaptors[0];
     expect(walletAdaptor, 'wallet adaptor should exist').toBeTruthy();
     expect(
-      walletAdaptor instanceof TestWalletAdaptor,
+      walletAdaptor instanceof MockWalletAdaptor,
       'Should be a test wallet adaptor'
     ).toBeTruthy();
-    expect(walletAdaptor.name, 'should have test adaptor').toEqual(TestWalletAdaptorName);
+    expect(walletAdaptor.name, 'should have test adaptor').toEqual(MockWalletAdaptorName);
   });
 
   it('WalletModel should respond to changes in the wallet adaptor connected state', async () => {
     const walletModel = DependencyService.resolve<WalletModel>(WalletModel);
-    const walletAdaptor = TestWalletAdaptorService.GetTestWalletAdaptor();
+    const walletAdaptor = MockWalletAdaptorService.GetMockWalletAdaptor();
     expect(walletModel.connected, 'Wallet Model and Wallet Adaptor should be the same').toEqual(
       walletAdaptor.connected
     );

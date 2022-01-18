@@ -9,8 +9,12 @@ import {
 } from '@solana/wallet-adapter-wallets';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base/lib/cjs';
 
+export interface IWalletAdaptorService {
+  getAdaptors(network: WalletAdapterNetwork): Array<Adapter>;
+}
+
 @singleton()
-export class WalletAdaptorService {
+export class WalletAdaptorService implements IWalletAdaptorService {
   constructor() {}
   getAdaptors(network: WalletAdapterNetwork): Array<Adapter> {
     return [

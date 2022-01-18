@@ -1,6 +1,6 @@
 import { getViewModelForTest } from '../../__test__/TestViewModelUtils';
 import { WalletViewModel } from './WalletViewModel';
-import { TestWalletAdaptorService } from '../../__test__/TestWalletAdaptor';
+import { MockWalletAdaptorService } from '../../__mocks__/services/MockWalletAdaptor';
 import { DependencyService } from '../../services/injection/DependencyContext';
 import { WalletModel } from '../../models/WalletModel/WalletModel';
 import { awaitReaction } from '../../core/ObservableReactionContainer';
@@ -10,10 +10,10 @@ describe('WalletViewModel should work as expected', function () {
   let unmount: Function;
 
   beforeAll(() => {
-    TestWalletAdaptorService.SetTestAdaptorList();
+    MockWalletAdaptorService.SetTestAdaptorService();
   });
   afterAll(() => {
-    TestWalletAdaptorService.RestoreWalletAdaptorList();
+    MockWalletAdaptorService.RestoreWalletAdaptorService();
   });
 
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe('WalletViewModel should work as expected', function () {
   });
 
   it('WalletViewModel should ', async () => {
-    const walletAdaptor = TestWalletAdaptorService.GetTestWalletAdaptor();
+    const walletAdaptor = MockWalletAdaptorService.GetMockWalletAdaptor();
     expect(walletVM.connected, 'WalletVM should not be connected').toBeFalsy();
     walletAdaptor.connect();
     const isConnected = await awaitReaction(
