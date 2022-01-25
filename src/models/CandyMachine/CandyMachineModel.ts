@@ -1,11 +1,14 @@
 import { Model } from '../Model';
 import { singleton } from 'tsyringe';
-import { SolanaModel } from '../Solana/SolanaModel';
+import { SolanaModel, TokenAccountInfo } from '../Solana/SolanaModel';
 import { action, makeObservable, observable, runInAction } from 'mobx';
 import { DI_KEYS } from '../../core/Constants';
 import { Program, web3 } from '@project-serum/anchor';
 import { DependencyService } from '../../services/injection/DependencyContext';
 import { isEmpty } from 'lodash';
+import { WalletModel } from '../WalletModel/WalletModel';
+import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
 
 export interface ICandyMachineModel {
   getCandyMachineState(): Promise<void>;
@@ -28,7 +31,7 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
 
   protected _candyMachineInfo: unknown;
 
-  constructor(protected solanaModel: SolanaModel) {
+  constructor(protected solanaModel: SolanaModel, protected walletModel: WalletModel) {
     super();
     this.candyMachineId = DependencyService.resolve(DI_KEYS.CANDY_MACHINE_ID);
     makeObservable(this, {
@@ -48,6 +51,48 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     this.getCandyMachineState().then(() => {
       runInAction(() => (this.isInitialized = true));
     });
+  }
+
+  get candyMachine(): any {
+    return this._candyMachineInfo;
+  }
+
+  public async getCandyMachineCreatorTokenAccount(candyMachine: any): Promise<TokenAccountInfo> {
+    const candyMachineId = new PublicKey(candyMachine);
+    const data = await PublicKey.findProgramAddress(
+      [Buffer.from('candy_machine'), candyMachineId.toBuffer()],
+      CandyMachineModel.CandyMachineProgramAddress
+    );
+    return { mintAddress: data[0], quantity: data[1] };
+  }
+
+  //TODO: look at moving to SolanaModel
+  public async getMetaDataAddress(nftMintAddress: PublicKey): Promise<PublicKey> {
+    const data: [PublicKey, number] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        SolanaModel.TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        nftMintAddress.toBuffer(),
+      ],
+      SolanaModel.TOKEN_METADATA_PROGRAM_ID
+    );
+
+    return data[0];
+  }
+
+  //TODO: look at moving to SolanaModel
+  public async getMasterEditionAddress(nftMintAddress: PublicKey): Promise<PublicKey> {
+    const data: [PublicKey, number] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        SolanaModel.TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        nftMintAddress.toBuffer(),
+        Buffer.from('edition'),
+      ],
+      SolanaModel.TOKEN_METADATA_PROGRAM_ID
+    );
+
+    return data[0];
   }
 
   public async getCandyMachineState() {
@@ -83,6 +128,90 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     this.goLiveDateTime = `${new Date(this.goLiveData * 1000).toUTCString()}`;
 
     this.logData();
+  }
+
+  public async mintToken() {
+    const nftMintAddress = web3.Keypair.generate();
+    const walletPubKey = this.walletModel.pubKey;
+
+    const usersTokenAccountAddress =
+      await this.solanaModel.getAssociatedTokenAccountAddressForToken(
+        nftMintAddress.publicKey,
+        walletPubKey
+      );
+
+    const candyMachineTokenMint = this.candyMachine.tokenMint;
+    const userPayingAccountAddress = candyMachineTokenMint
+      ? await this.solanaModel.getAssociatedTokenAccountAddressForToken(
+          candyMachineTokenMint,
+          walletPubKey
+        )
+      : walletPubKey;
+
+    const candyMachineAddress = this.candyMachine.id;
+    const remainingAccounts: any[] = [];
+    const signers = [nftMintAddress];
+
+    const instructions = [
+      this.createMintAccountInstruction(nftMintAddress.publicKey),
+      this.createInitMintInstructionForUsersPublicKey(nftMintAddress),
+      this.solanaModel.createAssociatedTokenAccountInstruction(
+        usersTokenAccountAddress,
+        walletPubKey,
+        walletPubKey,
+        nftMintAddress.publicKey
+      ),
+      this.solanaModel.createMintToInstruction(
+        nftMintAddress.publicKey,
+        usersTokenAccountAddress,
+        walletPubKey,
+        [],
+        1
+      ),
+    ];
+
+    const metaDataAddress = await this.getMetaDataAddress(nftMintAddress.publicKey);
+    const masterEditionAddress = await this.getMasterEditionAddress(nftMintAddress.publicKey);
+
+    const { mintAddress: candyMachineCreatorAdr, quantity: creatorBump } =
+      await this.getCandyMachineCreatorTokenAccount(candyMachineAddress);
+
+    const mintNftInstructions = await this.candyMachine.program.instruction.mintNft(creatorBump, {
+      accounts: {
+        candyMachine: candyMachineAddress,
+        candyMachineCreator: candyMachineCreatorAdr,
+        payer: walletPubKey,
+        wallet: this.candyMachine.state.treasury,
+        mint: nftMintAddress.publicKey,
+        metadata: metaDataAddress,
+        masterEdition: masterEditionAddress,
+        mintAuthority: walletPubKey,
+        updateAuthority: walletPubKey,
+        tokenMetadataProgram: SolanaModel.TOKEN_METADATA_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
+        clock: web3.SYSVAR_CLOCK_PUBKEY,
+        recentBlockhashes: web3.SYSVAR_RECENT_BLOCKHASHES_PUBKEY,
+        instructionSysvarAccount: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+      },
+      remainingAccounts: remainingAccounts.length > 0 ? remainingAccounts : undefined,
+    });
+
+    instructions.push();
+  }
+
+  private createInitMintInstructionForUsersPublicKey(nftMintAddress: Keypair) {
+    return this.solanaModel.createInitMintInstructionForUsersPublicKey(
+      nftMintAddress.publicKey,
+      this.walletModel.pubKey,
+      this.walletModel.pubKey,
+      0
+    );
+  }
+
+  private createMintAccountInstruction(nftMintAddress: PublicKey) {
+    return this.solanaModel.createMintAccountInstruction(nftMintAddress, this.walletModel.pubKey);
   }
 
   public logData() {

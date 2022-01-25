@@ -1,6 +1,6 @@
 import '@abraham/reflection';
 import { singleton } from 'tsyringe';
-import { autorun, makeObservable, observable, runInAction } from 'mobx';
+import { autorun, computed, makeObservable, observable, runInAction } from 'mobx';
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { PublicKey } from '@solana/web3.js';
 import { WalletAdaptorService } from '../../services/WalletAdaptorService/WalletAdaptorService';
@@ -28,6 +28,7 @@ export class WalletModel extends Model {
       connected: observable,
       adaptors: observable,
       selectedAdaptor: observable,
+      pubKey: computed,
     });
 
     this.onConnect = this.onConnect.bind(this);
@@ -96,5 +97,9 @@ export class WalletModel extends Model {
       this.onConnect(adaptor, adaptor.publicKey);
     }
     return adaptor;
+  }
+
+  get pubKey(): PublicKey {
+    return new PublicKey(this.publicKey);
   }
 }
