@@ -1,11 +1,25 @@
 import { Model } from '../Model';
 import { Provider, web3 } from '@project-serum/anchor';
-import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { u64 } from '@solana/spl-token';
 import { DependencyService } from '../../services/injection/DependencyContext';
 import { DI_KEYS } from '../../core/Constants';
-import { Connection, PublicKey, Signer, TransactionInstruction } from '@solana/web3.js';
+import {
+  Blockhash,
+  Commitment,
+  Connection,
+  FeeCalculator,
+  Keypair,
+  PublicKey,
+  SignatureStatus,
+  Signer,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { get } from 'lodash';
-import { singleton } from 'tsyringe';
+import { delay, inject, singleton } from 'tsyringe';
+import { WalletModel } from '../WalletModel/WalletModel';
+import { SolanaInstructionService } from './SolanaInstructionService';
+import { BlockType, DEFAULT_TIMEOUT, SolanaTransactionService } from './SolanaTransactionService';
 
 export type TokenAccountInfo = {
   mintAddress: PublicKey;
@@ -26,6 +40,16 @@ export class SolanaModel extends Model {
   );
 
   static readonly CIVIC = new web3.PublicKey('gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs');
+
+  constructor(
+    protected walletModel: WalletModel,
+    @inject(delay(() => SolanaInstructionService))
+    protected readonly instructionService: Readonly<SolanaInstructionService>,
+    @inject(delay(() => SolanaTransactionService))
+    protected readonly transactionService: Readonly<SolanaTransactionService>
+  ) {
+    super();
+  }
 
   protected onInitialize(): void {
     if (typeof window === 'undefined') return;
@@ -70,23 +94,20 @@ export class SolanaModel extends Model {
     tokenMintAddress: PublicKey,
     buyersAddress: PublicKey
   ): Promise<TokenAccountInfo> {
-    const tokenAcctData = await web3.PublicKey.findProgramAddress(
-      [buyersAddress.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), tokenMintAddress.toBuffer()],
-      SolanaModel.SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+    return this.instructionService.getAssociatedTokenAccountForToken(
+      tokenMintAddress,
+      buyersAddress
     );
-
-    return { mintAddress: tokenAcctData[0], quantity: tokenAcctData[1] };
   }
 
   public async getAssociatedTokenAccountAddressForToken(
     tokenMintAddress: PublicKey,
     buyersAddress: PublicKey
   ): Promise<PublicKey> {
-    const tokenAcctInfo = await this.getAssociatedTokenAccountForToken(
+    return this.instructionService.getAssociatedTokenAccountAddressForToken(
       tokenMintAddress,
       buyersAddress
     );
-    return tokenAcctInfo.mintAddress;
   }
 
   public createInitMintInstructionForUsersPublicKey(
@@ -95,12 +116,11 @@ export class SolanaModel extends Model {
     freezeAuthorityAddress: PublicKey,
     decimals: number = 6
   ): TransactionInstruction {
-    return Token.createInitMintInstruction(
-      TOKEN_PROGRAM_ID,
+    return this.instructionService.createInitMintInstructionForUsersPublicKey(
       tokenMintAddress,
-      decimals,
       mintAuthorityAddress,
-      freezeAuthorityAddress
+      freezeAuthorityAddress,
+      decimals
     );
   }
 
@@ -108,16 +128,7 @@ export class SolanaModel extends Model {
     tokenMintAddress: PublicKey,
     walletPubKey: PublicKey
   ): Promise<TransactionInstruction> {
-    const minLamports = await this.provider.connection.getMinimumBalanceForRentExemption(
-      MintLayout.span
-    );
-    return web3.SystemProgram.createAccount({
-      fromPubkey: walletPubKey,
-      newAccountPubkey: tokenMintAddress,
-      space: MintLayout.span,
-      lamports: minLamports,
-      programId: TOKEN_PROGRAM_ID,
-    });
+    return this.instructionService.createMintAccountInstruction(tokenMintAddress, walletPubKey);
   }
 
   public createMintToInstruction(
@@ -127,8 +138,7 @@ export class SolanaModel extends Model {
     multiSigners: Array<Signer> = [],
     amountToMint: number = 1
   ): TransactionInstruction {
-    return Token.createMintToInstruction(
-      TOKEN_PROGRAM_ID,
+    return this.instructionService.createMintToInstruction(
       tokenMintAddress,
       tokenAccountAddress,
       walletPubKey,
@@ -143,27 +153,137 @@ export class SolanaModel extends Model {
     walletAddress: PublicKey,
     splTokenMintAddress: PublicKey
   ): TransactionInstruction {
-    const keys = [
-      { pubkey: payer, isSigner: true, isWritable: true },
-      { pubkey: associatedTokenAddress, isSigner: false, isWritable: true },
-      { pubkey: walletAddress, isSigner: false, isWritable: false },
-      { pubkey: splTokenMintAddress, isSigner: false, isWritable: false },
-      {
-        pubkey: web3.SystemProgram.programId,
-        isSigner: false,
-        isWritable: false,
-      },
-      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      {
-        pubkey: web3.SYSVAR_RENT_PUBKEY,
-        isSigner: false,
-        isWritable: false,
-      },
-    ];
-    return new TransactionInstruction({
-      keys,
-      programId: SolanaModel.SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-      data: Buffer.from([]),
-    });
+    return this.instructionService.createAssociatedTokenAccountInstruction(
+      associatedTokenAddress,
+      payer,
+      walletAddress,
+      splTokenMintAddress
+    );
+  }
+
+  public createApproveInstruction(
+    tokenAccountAdr: PublicKey,
+    delegate: PublicKey,
+    owner: PublicKey,
+    multiSigners: Array<Keypair>,
+    amount: number | u64
+  ): TransactionInstruction {
+    return this.instructionService.createApproveInstruction(
+      tokenAccountAdr,
+      delegate,
+      owner,
+      multiSigners,
+      amount
+    );
+  }
+
+  public createRevokeInstruction(
+    tokenAccountAdr: PublicKey,
+    owner: PublicKey,
+    multiSigners: Array<Keypair>
+  ): TransactionInstruction {
+    return this.instructionService.createRevokeInstruction(tokenAccountAdr, owner, multiSigners);
+  }
+
+  public async getErrorForTransaction(txID: string): Promise<Array<string>> {
+    return this.transactionService.getErrorForTransaction(txID);
+  }
+
+  public async sendTransactionsWithManualRetry(
+    instructions: Array<Array<TransactionInstruction>>,
+    signers: Array<Array<Keypair>>
+  ): Promise<string[]> {
+    return this.transactionService.sendTransactionsWithManualRetry(instructions, signers);
+  }
+
+  public async sendTransactions(
+    instructionSet: Array<Array<TransactionInstruction>>,
+    signersSet: Array<Array<Keypair>>,
+    sequenceType = 'Parallel',
+    commitment: Commitment = 'singleGossip',
+    successCallback = (txid: string, ind: any) => {},
+    failCallback = (txid: string, ind: any) => false,
+    block?: {
+      blockhash: Blockhash;
+      feeCalculator: FeeCalculator;
+    }
+  ): Promise<{ number: number; txs: Awaited<{ txid: string; slot: number }>[] }> {
+    return this.transactionService.sendTransactions(
+      instructionSet,
+      signersSet,
+      sequenceType,
+      commitment,
+      successCallback,
+      failCallback,
+      block
+    );
+  }
+
+  public async sendSignedTransaction(
+    signedTransaction: Transaction,
+    timeout = DEFAULT_TIMEOUT
+  ): Promise<{ txid: string; slot: number }> {
+    return this.transactionService.sendSignedTransaction(signedTransaction, timeout);
+  }
+
+  public async sendTransaction(
+    instructions: Array<TransactionInstruction>,
+    signers: Array<Keypair>,
+    awaitConfirmation: boolean = true,
+    commitment: Commitment = 'singleGossip',
+    includesFeePayer = false,
+    successCallback = (txid: string, ind: any) => {},
+    failCallback = (txid: string, ind: any) => false,
+    block?: {
+      blockhash: Blockhash;
+      feeCalculator: FeeCalculator;
+    }
+  ): Promise<{ txid: string; slot: number }> {
+    return this.transactionService.sendTransaction(
+      instructions,
+      signers,
+      awaitConfirmation,
+      commitment,
+      includesFeePayer,
+      successCallback,
+      failCallback,
+      block
+    );
+  }
+
+  public async sendTransactionWithRetry(
+    instructions: Array<TransactionInstruction>,
+    signers: Array<Keypair>,
+    commitment: Commitment = 'singleGossip',
+    includesFeePayer = false,
+    beforeSend?: () => void | null,
+    block?: BlockType | null
+  ): Promise<{ txid: string; slot: number }> {
+    return this.transactionService.sendTransactionWithRetry(
+      instructions,
+      signers,
+      commitment,
+      includesFeePayer,
+      beforeSend,
+      block
+    );
+  }
+
+  public async simulateTransaction(transaction: Transaction, commitment: Commitment): Promise<any> {
+    return this.transactionService.simulateTransaction(transaction, commitment);
+  }
+
+  public async awaitTransactionSignatureConfirmation(
+    txID: string,
+    timeout: number,
+    commitment = 'recent',
+    queryStatus = false
+  ): Promise<SignatureStatus | null> {
+    return this.transactionService.awaitTransactionSignatureConfirmation(
+      txID,
+      timeout,
+      commitment,
+      queryStatus
+    );
   }
 }

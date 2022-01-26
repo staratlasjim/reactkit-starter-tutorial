@@ -1,8 +1,13 @@
 import '@abraham/reflection';
 import { singleton } from 'tsyringe';
 import { autorun, computed, makeObservable, observable, runInAction } from 'mobx';
-import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { PublicKey } from '@solana/web3.js';
+import {
+  Adapter,
+  MessageSignerWalletAdapter,
+  SignerWalletAdapter,
+  WalletAdapterNetwork,
+} from '@solana/wallet-adapter-base';
+import { PublicKey, Transaction } from '@solana/web3.js';
 import { WalletAdaptorService } from '../../services/WalletAdaptorService/WalletAdaptorService';
 import { Model } from '../Model';
 
@@ -101,5 +106,26 @@ export class WalletModel extends Model {
 
   get pubKey(): PublicKey {
     return new PublicKey(this.publicKey);
+  }
+
+  get signer(): SignerWalletAdapter {
+    return this.selectedAdaptor as SignerWalletAdapter;
+  }
+
+  get messageSigner(): MessageSignerWalletAdapter {
+    return this.selectedAdaptor as MessageSignerWalletAdapter;
+  }
+
+  public signAllTransactions(transactions: Array<Transaction>): Promise<Array<Transaction>> {
+    if (!this.selectedAdaptor) throw new Error('Not connected to an adaptor');
+
+    const signer = this.signer;
+    return signer.signAllTransactions(transactions);
+  }
+
+  public signTransaction(transaction: Transaction): Promise<Transaction> {
+    if (!this.selectedAdaptor) throw new Error('Not connected to a wallet adaptor');
+
+    return this.signer.signTransaction(transaction);
   }
 }

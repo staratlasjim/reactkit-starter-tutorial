@@ -5,7 +5,7 @@ import { DI_KEYS } from '../../../core/Constants';
 import { Text } from '../../GlobalStyle.style';
 import { useViewModel } from '../../../viewmodels/useViewModel';
 import { CandyMachineInfoViewModel } from '../../../viewmodels/candymachine/CandyMachineInfoViewModel';
-import { CMIViewGeneralInfoContainer } from './CandyMachineInfoView.style';
+import { CMIViewGeneralInfoContainer, CMIViewMintBtn } from './CandyMachineInfoView.style';
 
 export const CandyMachineInfoView: FC = observer(() => {
   const candyMachineId = useDependency(DI_KEYS.CANDY_MACHINE_ID);
@@ -37,6 +37,7 @@ export const CandyMachineInfoView: FC = observer(() => {
           <Text size="3">Items Remaining: {cmVM.itemsRemaining}</Text>
           <Text size="3">Items Redeemed: {cmVM.itemsRedeemed}</Text>
           <Text size="3">Go Live Date: {cmVM.goLiveDateTime}</Text>
+          <CMIViewMintBtn>Mint NFT</CMIViewMintBtn>
         </>
       )}
     </>
