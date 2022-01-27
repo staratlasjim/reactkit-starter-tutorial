@@ -6,6 +6,7 @@ import { Text } from '../../GlobalStyle.style';
 import { useViewModel } from '../../../viewmodels/useViewModel';
 import { CandyMachineInfoViewModel } from '../../../viewmodels/candymachine/CandyMachineInfoViewModel';
 import { CMIViewGeneralInfoContainer, CMIViewMintBtn } from './CandyMachineInfoView.style';
+import { nanoid } from 'nanoid';
 
 export const CandyMachineInfoView: FC = observer(() => {
   const candyMachineId = useDependency(DI_KEYS.CANDY_MACHINE_ID);
@@ -37,7 +38,30 @@ export const CandyMachineInfoView: FC = observer(() => {
           <Text size="3">Items Remaining: {cmVM.itemsRemaining}</Text>
           <Text size="3">Items Redeemed: {cmVM.itemsRedeemed}</Text>
           <Text size="3">Go Live Date: {cmVM.goLiveDateTime}</Text>
-          <CMIViewMintBtn>Mint NFT</CMIViewMintBtn>
+          <CMIViewMintBtn onClick={() => cmVM.mintToken()}>Mint NFT</CMIViewMintBtn>
+
+          {cmVM.hasMintError && (
+            <>
+              <Text size="2">Error: {cmVM.mintError}</Text>
+            </>
+          )}
+
+          {!cmVM.hasMintError && cmVM.mintStarted && (
+            <>
+              <Text size={'2'}>Minting tokens, please wait...</Text>
+            </>
+          )}
+
+          {!cmVM.hasMintError && cmVM.mintFinished && (
+            <>
+              <Text size={'2'}>Mints done:</Text>
+              {cmVM.mints.map((value) => (
+                <Text size={'3'} key={nanoid(4)}>
+                  {value}
+                </Text>
+              ))}
+            </>
+          )}
         </>
       )}
     </>

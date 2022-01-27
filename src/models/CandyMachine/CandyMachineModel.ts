@@ -1,8 +1,8 @@
 import { Model } from '../Model';
-import { delay, inject, singleton } from 'tsyringe';
+import { singleton } from 'tsyringe';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Keypair, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
-import { Program, web3 } from '@project-serum/anchor';
+import { Program, web3, BN } from '@project-serum/anchor';
 import { action, makeObservable, observable, runInAction } from 'mobx';
 
 import { SolanaModel, TokenAccountInfo } from '../Solana/SolanaModel';
@@ -12,8 +12,44 @@ import { DependencyService } from '../../services/injection/DependencyContext';
 import { isEmpty } from 'lodash';
 import { WalletModel } from '../WalletModel/WalletModel';
 
+export interface CandyMachineState {
+  itemsAvailable: number;
+  itemsRedeemed: number;
+  itemsRemaining: number;
+  treasury: web3.PublicKey;
+  tokenMint: web3.PublicKey;
+  isSoldOut: boolean;
+  isActive: boolean;
+  isPresale: boolean;
+  goLiveDate: BN;
+  price: BN;
+  gatekeeper: null | {
+    expireOnUse: boolean;
+    gatekeeperNetwork: web3.PublicKey;
+  };
+  endSettings: null | [number, BN];
+  whitelistMintSettings: null | {
+    mode: any;
+    mint: web3.PublicKey;
+    presale: boolean;
+    discountPrice: null | BN;
+  };
+  hiddenSettings: null | {
+    name: string;
+    uri: string;
+    hash: Uint8Array;
+  };
+}
+
+export interface CandyMachineAccount {
+  id: web3.PublicKey;
+  program: Program;
+  state: CandyMachineState;
+}
+
 export interface ICandyMachineModel {
-  getCandyMachineState(): Promise<void>;
+  getCandyMachineState(): Promise<CandyMachineAccount | null>;
+  mintToken(): Promise<Array<string>>;
   logData(): void;
 }
 
@@ -29,14 +65,15 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
   itemsRedeemed = 0;
   itemsRemaining = 0;
   goLiveData = 0;
-  preSale = 0;
+  preSale = false;
   goLiveDateTime = '';
 
-  protected _candyMachineInfo: unknown;
+  protected candyMachineState: CandyMachineAccount | null;
 
   constructor(protected solanaModel: SolanaModel, protected walletModel: WalletModel) {
     super();
     this.candyMachineId = DependencyService.resolve(DI_KEYS.CANDY_MACHINE_ID);
+    this.candyMachineState = null;
     makeObservable(this, {
       isInitialized: observable,
       itemsAvailable: observable,
@@ -64,14 +101,17 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     this.solanaModel.end();
   }
 
-  get candyMachine(): any {
-    return this._candyMachineInfo;
+  get candyMachine(): CandyMachineAccount {
+    if (!this.candyMachineState) throw Error('Candy Machine Account not set up');
+    return this.candyMachineState as CandyMachineAccount;
   }
 
-  public async getCandyMachineCreatorTokenAccount(candyMachine: any): Promise<TokenAccountInfo> {
-    const candyMachineId = new PublicKey(candyMachine);
+  public async getCandyMachineCreatorTokenAccount(
+    candyMachineAddress: PublicKey
+  ): Promise<TokenAccountInfo> {
+    console.log(`~~~ Candy Machine id: ${candyMachineAddress.toBase58()}`);
     const data = await PublicKey.findProgramAddress(
-      [Buffer.from('candy_machine'), candyMachineId.toBuffer()],
+      [Buffer.from('candy_machine'), candyMachineAddress.toBuffer()],
       CandyMachineModel.CandyMachineProgramAddress
     );
     return { mintAddress: data[0], quantity: data[1] };
@@ -106,8 +146,8 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     return data[0];
   }
 
-  public async getCandyMachineState() {
-    if (typeof window === 'undefined') return;
+  public async getCandyMachineState(): Promise<CandyMachineAccount | null> {
+    if (typeof window === 'undefined') return null;
 
     const candyMachineProgramId = CandyMachineModel.CandyMachineProgramAddress;
 
@@ -119,29 +159,63 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     if (!idl) throw new Error(`Unable to fetch idl for ${candyMachineProgramId}`);
 
     const program = new Program(idl, candyMachineProgramId, provider);
-    const candyMachine = await program.account.candyMachine.fetch(this.candyMachineId);
+    const candyMachineState = await program.account.candyMachine.fetch(this.candyMachineId);
 
-    if (!candyMachine)
+    if (!candyMachineState)
       throw new Error(`Unable to fetch candyMachineInfo for ${this.candyMachineId}`);
 
-    this._candyMachineInfo = candyMachine;
-    this.itemsAvailable = candyMachine.data.itemsAvailable.toNumber();
-    this.itemsRedeemed = candyMachine.itemsRedeemed.toNumber();
+    this.itemsAvailable = candyMachineState.data.itemsAvailable.toNumber();
+    this.itemsRedeemed = candyMachineState.itemsRedeemed.toNumber();
     this.itemsRemaining = this.itemsAvailable - this.itemsRedeemed;
-    this.goLiveData = candyMachine.data.goLiveDate.toNumber();
+    this.goLiveData = candyMachineState.data.goLiveDate.toNumber();
     this.preSale =
-      candyMachine.data.whitelistMintSettings &&
-      candyMachine.data.whitelistMintSettings.presale &&
-      (!candyMachine.data.goLiveDate ||
-        candyMachine.data.goLiveDate.toNumber() > new Date().getTime() / 1000);
+      candyMachineState.data.whitelistMintSettings &&
+      candyMachineState.data.whitelistMintSettings.presale &&
+      (!candyMachineState.data.goLiveDate ||
+        candyMachineState.data.goLiveDate.toNumber() > new Date().getTime() / 1000);
 
     // We will be using this later in our UI so let's generate this now
     this.goLiveDateTime = `${new Date(this.goLiveData * 1000).toUTCString()}`;
+    const state = candyMachineState;
+
+    const isActive =
+      (this.preSale || state.data.goLiveDate.toNumber() < new Date().getTime() / 1000) &&
+      (state.endSettings
+        ? state.endSettings.endSettingType.date
+          ? state.endSettings.number.toNumber() > new Date().getTime() / 1000
+          : this.itemsRedeemed < state.endSettings.number.toNumber()
+        : true);
+
+    this.candyMachineState = {
+      id: new PublicKey(this.candyMachineId),
+      program,
+      state: {
+        itemsAvailable: this.itemsAvailable,
+        itemsRedeemed: this.itemsRedeemed,
+        itemsRemaining: this.itemsRemaining,
+        isSoldOut: this.itemsRemaining === 0,
+        isActive,
+        isPresale: this.preSale,
+        goLiveDate: state.data.goLiveDate,
+        treasury: state.wallet,
+        tokenMint: state.tokenMint,
+        gatekeeper: state.data.gatekeeper,
+        endSettings: state.data.endSettings,
+        whitelistMintSettings: state.data.whitelistMintSettings,
+        hiddenSettings: state.data.hiddenSettings,
+        price: state.data.price,
+      },
+    };
 
     this.logData();
+
+    return this.candyMachineState;
   }
 
   public async mintToken() {
+    // refresh state here
+    await this.getCandyMachineState();
+
     const nftMintAddress = web3.Keypair.generate();
     const walletPubKey = this.walletModel.pubKey;
 
@@ -151,7 +225,7 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
         walletPubKey
       );
 
-    const candyMachineTokenMint = this.candyMachine.tokenMint;
+    const candyMachineTokenMint = this.candyMachine.state.tokenMint;
     const userPayingAccountAddress = candyMachineTokenMint
       ? await this.solanaModel.getAssociatedTokenAccountAddressForToken(
           candyMachineTokenMint,
@@ -191,8 +265,8 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     instructions: Array<TransactionInstruction>;
     cleanupInstructions: Array<TransactionInstruction>;
   }> {
-    const candyMachineAddress = this.candyMachine.id;
-
+    const candyMachineAddress = new PublicKey(this.candyMachineId);
+    console.log('\n\t~~~ candyMachineAddress: ', candyMachineAddress);
     const remainingAccounts: any[] = [];
     const cleanupInstructions: Array<TransactionInstruction> = [];
 
@@ -319,6 +393,7 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
   }
 
   protected async handleMintWithGateKeeper(remainingAccounts: any[]) {
+    if (!this.candyMachine || !this.candyMachine.state.gatekeeper) return;
     const gateWayPubKey = (
       await this.getGateWayNetworkTokenAddress(
         this.walletModel.pubKey,
@@ -351,6 +426,8 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     signers: Array<Keypair>,
     cleanupInstructions: Array<TransactionInstruction>
   ) {
+    if (!this.candyMachine.state.whitelistMintSettings) return;
+
     const mint = new web3.PublicKey(this.candyMachine.state.whitelistMintSettings.mint);
 
     const whiteListTokenAccountAdr =

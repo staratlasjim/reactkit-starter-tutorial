@@ -242,14 +242,14 @@ export class SolanaTransactionService {
     console.log('Started awaiting confirmation for', txid);
 
     let done = false;
-    await (async () => {
+    (async () => {
       while (!done && getUnixTs() - startTime < timeout) {
         this.solanaModel.connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true,
         });
         await sleep(500);
       }
-    })();
+    })().then(() => console.log('~~~ done with transaction await'));
     try {
       const confirmation = await this.awaitTransactionSignatureConfirmation(
         txid,

@@ -5,6 +5,7 @@ export const HomePageContainer = styled('div', {
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
+  alignItems: 'center',
   padding: '0 30px 0 30px',
   color: 'white',
   position: 'relative',
