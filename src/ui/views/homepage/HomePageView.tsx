@@ -13,12 +13,11 @@ import {
   HomePageHeaderSubText,
 } from './HomePageView.style';
 
-
-import {CandyMachineInfoView} from "../../components/candymachine/CandyMachineInfoView";
-import {WalletConnectView} from "../../components/walletconnect/WalletConnectView";
+import { CandyMachineInfoView } from '../../components/candymachine/CandyMachineInfoView';
+import { WalletConnectView } from '../../components/walletconnect/WalletConnectView';
+import { CandyMachineCountDownTimerView } from '../../components/candy-machine-count-down-timer/CandyMachineCountDownTimerView';
 
 export const HomePageView: FC = observer(() => {
-
   return (
     <div>
       <Head>
@@ -44,6 +43,7 @@ export const HomePageView: FC = observer(() => {
             </AuthedContainer>
           </HomeAuthCenterContainer>
           <CandyMachineInfoView />
+          <CandyMachineCountDownTimerView />
         </HomePageContainer>
       </main>
 

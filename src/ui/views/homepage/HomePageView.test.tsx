@@ -7,6 +7,7 @@ import { HomePageView } from './HomePageView';
 import { MockCandyMachineModel } from '../../../__mocks__/models/candymachine/MockCandyMachineModel';
 import { CandyMachineModel } from '../../../models/CandyMachine/CandyMachineModel';
 import { DI_KEYS } from '../../../core/Constants';
+import { CandyMachineCountDownTimerViewModel } from '../../../viewmodels/countdowntimer/CandyMachineCountDownTimerViewModel';
 
 describe('HomePageView should work as expected', function () {
   beforeAll(() => {
@@ -64,5 +65,14 @@ describe('HomePageView should work as expected', function () {
     });
 
     expect(getByText('Wallet connected: nope')).toBeInTheDocument();
+  });
+
+  it('should display the countdown timer', async () => {
+    const timerVm = DependencyService.resolve(CandyMachineCountDownTimerViewModel);
+    timerVm.labelString = 'Hello from candy machine test';
+    const { container, getByText } = render(<HomePageView />);
+    expect(container).toBeTruthy();
+
+    expect(getByText(timerVm.labelString)).toBeInTheDocument();
   });
 });

@@ -71,7 +71,7 @@ export class CandyMachineInfoViewModel extends ViewModel {
   get goLiveData(): number {
     return this.candyMachineModel.goLiveData;
   }
-  get preSale(): number {
+  get preSale(): boolean {
     return this.candyMachineModel.preSale;
   }
   get goLiveDateTime(): string {
