@@ -11,6 +11,9 @@ export class CandyMachineInfoViewModel extends ViewModel {
   mintFinished = false;
   mintError = '';
   mints: Array<string> = [];
+  mintAddress: string = '';
+  metaDataAddress: string = '';
+  masterEditionAddress: string = '';
 
   constructor(protected walletModel: WalletModel, protected candyMachineModel: CandyMachineModel) {
     super();
@@ -20,6 +23,9 @@ export class CandyMachineInfoViewModel extends ViewModel {
       mintStarted: observable,
       mintFinished: observable,
       mintError: observable,
+      mintAddress: observable,
+      metaDataAddress: observable,
+      masterEditionAddress: observable,
       hasMintError: computed,
       walletConnected: computed,
       userPublicKey: computed,
@@ -30,6 +36,8 @@ export class CandyMachineInfoViewModel extends ViewModel {
       goLiveData: computed,
       goLiveDateTime: computed,
       preSale: computed,
+      isActive: computed,
+      isSoldOut: computed,
     });
   }
 
@@ -82,6 +90,14 @@ export class CandyMachineInfoViewModel extends ViewModel {
     return !isEmpty(this.mintError);
   }
 
+  get isActive(): boolean {
+    return this.candyMachineModel.isActive;
+  }
+
+  get isSoldOut(): boolean {
+    return this.candyMachineModel.isSoldOut;
+  }
+
   async mintToken() {
     runInAction(() => {
       this.mintStarted = true;
@@ -89,8 +105,13 @@ export class CandyMachineInfoViewModel extends ViewModel {
     });
 
     try {
-      const mints = await this.candyMachineModel.mintToken();
-      runInAction(() => (this.mints = mints));
+      const mintResults = await this.candyMachineModel.mintToken();
+      runInAction(() => {
+        this.mintAddress = mintResults.mintAddress.toString();
+        this.metaDataAddress = mintResults.metaDataAddress.toString();
+        this.masterEditionAddress = mintResults.masterEditionAddress.toString();
+        this.mints = mintResults.tx;
+      });
     } catch (e: any) {
       console.error('Error minting token', e);
       runInAction(() => (this.mintError = e.toString()));

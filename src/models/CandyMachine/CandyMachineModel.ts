@@ -2,8 +2,8 @@ import { Model } from '../Model';
 import { singleton } from 'tsyringe';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Keypair, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
-import { Program, web3, BN } from '@project-serum/anchor';
-import { action, makeObservable, observable, runInAction } from 'mobx';
+import { BN, Program, web3 } from '@project-serum/anchor';
+import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 
 import { SolanaModel, TokenAccountInfo } from '../Solana/SolanaModel';
 import { DI_KEYS } from '../../core/Constants';
@@ -47,9 +47,16 @@ export interface CandyMachineAccount {
   state: CandyMachineState;
 }
 
+export interface ICandyMachineMintResults {
+  mintAddress: PublicKey;
+  metaDataAddress: PublicKey;
+  masterEditionAddress: PublicKey;
+  tx: Array<string>;
+}
+
 export interface ICandyMachineModel {
   getCandyMachineState(): Promise<CandyMachineAccount | null>;
-  mintToken(): Promise<Array<string>>;
+  mintToken(): Promise<ICandyMachineMintResults>;
   logData(): void;
 }
 
@@ -67,6 +74,7 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
   goLiveData = 0;
   preSale = false;
   goLiveDateTime = '';
+  isActive: boolean = false;
 
   protected candyMachineState: CandyMachineAccount | null;
 
@@ -82,7 +90,9 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
       goLiveData: observable,
       preSale: observable,
       goLiveDateTime: observable,
+      isActive: observable,
       getCandyMachineState: action.bound,
+      isSoldOut: computed,
     });
   }
 
@@ -104,6 +114,10 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
   get candyMachine(): CandyMachineAccount {
     if (!this.candyMachineState) throw Error('Candy Machine Account not set up');
     return this.candyMachineState as CandyMachineAccount;
+  }
+
+  get isSoldOut(): boolean {
+    return this.itemsRedeemed === this.itemsAvailable;
   }
 
   public async getCandyMachineCreatorTokenAccount(
@@ -174,17 +188,19 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
       (!candyMachineState.data.goLiveDate ||
         candyMachineState.data.goLiveDate.toNumber() > new Date().getTime() / 1000);
 
+    // this.preSale = dayjs().isBefore(dayjs(new Date(this.goLiveData * 1000)));
+
     // We will be using this later in our UI so let's generate this now
     this.goLiveDateTime = `${new Date(this.goLiveData * 1000).toUTCString()}`;
     const state = candyMachineState;
 
-    const isActive =
+    const isActive = (this.isActive =
       (this.preSale || state.data.goLiveDate.toNumber() < new Date().getTime() / 1000) &&
       (state.endSettings
         ? state.endSettings.endSettingType.date
           ? state.endSettings.number.toNumber() > new Date().getTime() / 1000
           : this.itemsRedeemed < state.endSettings.number.toNumber()
-        : true);
+        : true));
 
     this.candyMachineState = {
       id: new PublicKey(this.candyMachineId),
@@ -212,7 +228,7 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     return this.candyMachineState;
   }
 
-  public async mintToken() {
+  public async mintToken(): Promise<ICandyMachineMintResults> {
     // refresh state here
     await this.getCandyMachineState();
 
@@ -242,13 +258,20 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
       userPayingAccountAddress,
       signers
     );
-
+    const metaDataAddress = await this.getMetaDataAddress(nftMintAddress.publicKey);
+    const masterEditionAddress = await this.getMasterEditionAddress(nftMintAddress.publicKey);
     try {
       const data = await this.solanaModel.sendTransactions(
         [instructions, cleanupInstructions],
         [signers, []]
       );
-      return data.txs.map((t) => t.txid);
+      this.getCandyMachineState().then(() => console.log('state updated'));
+      return {
+        mintAddress: nftMintAddress.publicKey,
+        metaDataAddress,
+        masterEditionAddress,
+        tx: data.txs.map((t) => t.txid),
+      };
     } catch (e) {
       console.error('Error sending candy machine transaction', e);
       throw e;

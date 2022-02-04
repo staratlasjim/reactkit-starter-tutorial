@@ -1,5 +1,5 @@
 import { ViewModel } from '../ViewModel';
-import { autorun, makeObservable, observable } from 'mobx';
+import { autorun, makeObservable, observable, runInAction } from 'mobx';
 import { Lifecycle, scoped } from 'tsyringe';
 import { CandyMachineModel } from '../../models/CandyMachine/CandyMachineModel';
 import dayjs from 'dayjs';
@@ -44,6 +44,11 @@ export class CandyMachineCountDownTimerViewModel extends ViewModel {
       this.timerString = 'Ready to MINT';
       clearInterval(this.timerLoop);
       this.timerLoop = null;
+      if (!this.candyMachineModel.isActive) {
+        runInAction(() => {
+          this.candyMachineModel.isActive = true;
+        });
+      }
       return;
     }
 

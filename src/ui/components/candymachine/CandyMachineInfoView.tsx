@@ -38,7 +38,11 @@ export const CandyMachineInfoView: FC = observer(() => {
           <Text size="3">Items Remaining: {cmVM.itemsRemaining}</Text>
           <Text size="3">Items Redeemed: {cmVM.itemsRedeemed}</Text>
           <Text size="3">Go Live Date: {cmVM.goLiveDateTime}</Text>
-          <CMIViewMintBtn onClick={() => cmVM.mintToken()}>Mint NFT</CMIViewMintBtn>
+          {cmVM.isActive && !cmVM.isSoldOut && (
+            <CMIViewMintBtn onClick={() => cmVM.mintToken()}>Mint NFT</CMIViewMintBtn>
+          )}
+
+          {cmVM.isSoldOut && <div>Sold Out 🙊</div>}
 
           {cmVM.hasMintError && (
             <>
@@ -55,9 +59,24 @@ export const CandyMachineInfoView: FC = observer(() => {
           {!cmVM.hasMintError && cmVM.mintFinished && (
             <>
               <Text size={'2'}>Mints done:</Text>
+              {cmVM.mintAddress && (
+                <Text size={'3'} key={nanoid(4)}>
+                  Mint: {cmVM.mintAddress}
+                </Text>
+              )}
+              {cmVM.metaDataAddress && (
+                <Text size={'3'} key={nanoid(4)}>
+                  Meta: {cmVM.metaDataAddress}
+                </Text>
+              )}
+              {cmVM.masterEditionAddress && (
+                <Text size={'3'} key={nanoid(4)}>
+                  Master: {cmVM.masterEditionAddress}
+                </Text>
+              )}
               {cmVM.mints.map((value) => (
                 <Text size={'3'} key={nanoid(4)}>
-                  {value}
+                  tx: {value}
                 </Text>
               ))}
             </>
