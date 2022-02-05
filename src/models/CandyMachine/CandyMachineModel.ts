@@ -178,11 +178,11 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     if (!candyMachineState)
       throw new Error(`Unable to fetch candyMachineInfo for ${this.candyMachineId}`);
 
-    this.itemsAvailable = candyMachineState.data.itemsAvailable.toNumber();
-    this.itemsRedeemed = candyMachineState.itemsRedeemed.toNumber();
-    this.itemsRemaining = this.itemsAvailable - this.itemsRedeemed;
-    this.goLiveData = candyMachineState.data.goLiveDate.toNumber();
-    this.preSale =
+    const itemsAvailable = candyMachineState.data.itemsAvailable.toNumber();
+    const itemsRedeemed = candyMachineState.itemsRedeemed.toNumber();
+    const itemsRemaining = this.itemsAvailable - this.itemsRedeemed;
+    const goLiveData = candyMachineState.data.goLiveDate.toNumber();
+    const preSale =
       candyMachineState.data.whitelistMintSettings &&
       candyMachineState.data.whitelistMintSettings.presale &&
       (!candyMachineState.data.goLiveDate ||
@@ -191,27 +191,27 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     // this.preSale = dayjs().isBefore(dayjs(new Date(this.goLiveData * 1000)));
 
     // We will be using this later in our UI so let's generate this now
-    this.goLiveDateTime = `${new Date(this.goLiveData * 1000).toUTCString()}`;
+    const goLiveDateTime = `${new Date(this.goLiveData * 1000).toUTCString()}`;
     const state = candyMachineState;
 
     const isActive = (this.isActive =
-      (this.preSale || state.data.goLiveDate.toNumber() < new Date().getTime() / 1000) &&
+      (preSale || state.data.goLiveDate.toNumber() < new Date().getTime() / 1000) &&
       (state.endSettings
         ? state.endSettings.endSettingType.date
           ? state.endSettings.number.toNumber() > new Date().getTime() / 1000
           : this.itemsRedeemed < state.endSettings.number.toNumber()
         : true));
 
-    this.candyMachineState = {
+    const candyMachineAccount: CandyMachineAccount = {
       id: new PublicKey(this.candyMachineId),
       program,
       state: {
-        itemsAvailable: this.itemsAvailable,
-        itemsRedeemed: this.itemsRedeemed,
-        itemsRemaining: this.itemsRemaining,
-        isSoldOut: this.itemsRemaining === 0,
+        itemsAvailable: itemsAvailable,
+        itemsRedeemed: itemsRedeemed,
+        itemsRemaining: itemsRemaining,
+        isSoldOut: itemsRemaining === 0,
         isActive,
-        isPresale: this.preSale,
+        isPresale: preSale,
         goLiveDate: state.data.goLiveDate,
         treasury: state.wallet,
         tokenMint: state.tokenMint,
@@ -223,9 +223,18 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
       },
     };
 
-    this.logData();
+    runInAction(() => {
+      this.candyMachineState = candyMachineAccount;
+      this.itemsAvailable = itemsAvailable;
+      this.itemsRedeemed = itemsRedeemed;
+      this.itemsRemaining = itemsRemaining;
+      this.isActive = isActive;
+      this.preSale = preSale;
+    });
 
-    return this.candyMachineState;
+    // this.logData();
+
+    return candyMachineAccount;
   }
 
   public async mintToken(): Promise<ICandyMachineMintResults> {

@@ -41,7 +41,9 @@ export class CandyMachineCountDownTimerViewModel extends ViewModel {
     const dropDate = dayjs(this.dropDateTime);
 
     if (currentDate.isSame(dropDate) || currentDate.isAfter(dropDate)) {
-      this.timerString = 'Ready to MINT';
+      runInAction(() => {
+        this.timerString = 'Ready to MINT';
+      });
       clearInterval(this.timerLoop);
       this.timerLoop = null;
       if (!this.candyMachineModel.isActive) {
@@ -62,8 +64,12 @@ export class CandyMachineCountDownTimerViewModel extends ViewModel {
   protected createReactions(): void {
     this.addReaction(
       autorun(() => {
-        this.timerString = `Drop Date: ${this.candyMachineModel.goLiveDateTime}`;
-        this.dropDateTime = new Date(this.candyMachineModel.goLiveData * 1000);
+        const newTimeString = `Drop Date: ${this.candyMachineModel.goLiveDateTime}`;
+        const newGoLifeDateTime = new Date(this.candyMachineModel.goLiveData * 1000);
+        runInAction(() => {
+          this.timerString = newTimeString;
+          this.dropDateTime = newGoLifeDateTime;
+        });
       })
     );
   }
