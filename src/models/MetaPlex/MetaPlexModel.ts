@@ -2,13 +2,19 @@ import { singleton } from 'tsyringe';
 import { Model } from '../Model';
 import { SolanaModel } from '../Solana/SolanaModel';
 import { PublicKey } from '@solana/web3.js';
-import { Metadata, MetadataDataData } from '@metaplex-foundation/mpl-token-metadata';
-// import { mintNFT } from '@metaplex/js/lib/actions';
+import {
+  CreateMasterEditionV3,
+  Metadata,
+  MetadataDataData,
+} from '@metaplex-foundation/mpl-token-metadata';
+import { Wallet, actions } from '@metaplex/js';
 
 import { isString } from 'lodash';
 import axios from 'axios';
+import * as spl from 'easy-spl';
 import { WalletModel } from '../WalletModel/WalletModel';
-import { Wallet, actions } from '@metaplex/js';
+import { WalletI } from 'easy-spl';
+import BN from 'bn.js';
 
 export type SecondaryMetaDataType = {
   name: string;
@@ -51,11 +57,12 @@ export class MetaPlexModel extends Model {
 
   protected onInitialize(): void {
     this.solanaModel.initialize();
+    this.walletModel.initialize();
   }
 
-  protected onEnd() {
+  protected afterReactionsRemoved() {
     this.solanaModel.end();
-    super.onEnd();
+    this.walletModel.end();
   }
 
   async getMetaData(publicKey: string | PublicKey): Promise<Metadata> {
@@ -87,5 +94,62 @@ export class MetaPlexModel extends Model {
       uri: 'https://pmqsa4qd4d3k45t2cwzl7aq3unz5uha5e27ccu5e3jdc2fazqm.arweave.net/eyEgcgPg9q52ehWyv4Ibo3PaHB0mviFTpNpGLRQZ_g8/',
       maxSupply: 500,
     });
+  }
+
+  async transferToAnotherWallet(): Promise<string> {
+    const mintKey = new PublicKey('DVuVN5FR4T3pxVycs7EmyTt78VScASHatNxn9KPp1psf');
+    // const mintKey = new PublicKey('5gQS5p6zXor448jDR5TX2dwLET8vnEy2wJXPqgzUf5e4');
+    const transferTo = new PublicKey('D3btVHevDhcKYJxG1KuAswaLUvrjUR3nn43vDBGzXU1Q');
+    const user = spl.Wallet.fromWallet(
+      this.solanaModel.connection,
+      this.walletModel.selectedAdaptor as WalletI
+    );
+
+    // const mintA = await spl.Mint.create(
+    //   this.solanaModel.connection,
+    //   0,
+    //   this.walletModel.pubKey,
+    //   user
+    // );
+    // console.log(`~~~ ${mintA.key}`, mintA);
+
+    const ata = await spl.associatedTokenAccount.getAssociatedTokenAddress(mintKey, user.publicKey);
+    console.log(`~~~~ ATA: ${ata.toBase58()}`, ata);
+
+    // const response = await actions.mintEditionFromMaster({
+    //   connection: this.solanaModel.connection,
+    //   masterEditionMint: mintKey,
+    //   updateAuthority: user.publicKey,
+    //   wallet: this.walletModel.selectedAdaptor as unknown as Wallet,
+    // });
+    //
+    // console.log(`~~~ edition edition... ${response.edition.toBase58()}`, response);
+    // console.log(`~~~ edition mint... ${response.mint.toBase58()}`, response);
+    // console.log(`~~~ edition metadata... ${response.metadata.toBase58()}`, response);
+
+    const mint = await spl.Mint.get(
+      this.solanaModel.connection,
+      new PublicKey('Gze68TY76Sb8iGH8jZG7J4YiL3x4U78SpPtC1qAeyHcs')
+    );
+    const info = await mint.getInfo();
+    const balance = await mint.getBalance(user.publicKey);
+    console.log(`~~~ ${mint.key} # ${balance}`, info);
+
+    const txhash = user.transferToken(mint.key, transferTo, 1); //await mint.mintTo(transferTo, user, 1); //response.txId;
+    // const txhash = await mint.mintTo(user.publicKey, user, 10);
+    //
+    // const response = await actions.sendToken({
+    //   connection: this.solanaModel.connection,
+    //   wallet: this.walletModel.selectedAdaptor as unknown as Wallet,
+    //   source: ata,
+    //   destination: user.publicKey,
+    //   mint: mint.key,
+    //   amount: 10,
+    // });
+    //
+    // console.log(`~~~~ sendToken???`, response);
+    // const txhash = await user.transferToken(mintKey, transferTo, 1);
+
+    return txhash;
   }
 }

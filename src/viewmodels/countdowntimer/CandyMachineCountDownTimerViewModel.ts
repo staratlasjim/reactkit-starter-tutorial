@@ -29,11 +29,10 @@ export class CandyMachineCountDownTimerViewModel extends ViewModel {
     }, 1000);
   }
 
-  protected onEnd() {
+  protected afterReactionsRemoved() {
     if (this.timerLoop) clearInterval(this.timerLoop);
     this.timerLoop = null;
     this.candyMachineModel.end();
-    super.onEnd();
   }
 
   protected doCountDown(): void {

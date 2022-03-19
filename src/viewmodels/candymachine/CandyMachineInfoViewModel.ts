@@ -46,8 +46,7 @@ export class CandyMachineInfoViewModel extends ViewModel {
     this.candyMachineModel.initialize();
   }
 
-  protected onEnd() {
-    super.onEnd();
+  protected afterReactionsRemoved() {
     this.walletModel.end();
     this.candyMachineModel.end();
   }

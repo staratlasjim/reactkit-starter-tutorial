@@ -21,7 +21,7 @@ export class WalletViewModel extends ViewModel {
   protected onInitialize(): void {
     this.wallet.initialize();
   }
-  protected onEnd(): void {
+  protected afterReactionsRemoved(): void {
     this.wallet.end();
   }
 

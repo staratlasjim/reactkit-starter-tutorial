@@ -17,6 +17,8 @@ import { CandyMachineInfoView } from '../../components/candymachine/CandyMachine
 import { WalletConnectView } from '../../components/walletconnect/WalletConnectView';
 import { CandyMachineCountDownTimerView } from '../../components/candy-machine-count-down-timer/CandyMachineCountDownTimerView';
 import { DisplayNftImageListView } from '../DisplayNftImageListView/DisplayNftImageListView';
+import Link from 'next/link';
+import { MintNftView } from '../MintNft/MintNftView';
 
 export const HomePageView: FC = observer(() => {
   return (
@@ -43,6 +45,7 @@ export const HomePageView: FC = observer(() => {
               <WalletConnectView />
             </AuthedContainer>
           </HomeAuthCenterContainer>
+          <MintNftView />
           <CandyMachineInfoView />
           <CandyMachineCountDownTimerView />
           <DisplayNftImageListView />

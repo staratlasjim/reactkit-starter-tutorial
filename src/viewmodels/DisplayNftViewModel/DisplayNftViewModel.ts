@@ -45,7 +45,12 @@ export class DisplayNftViewModel extends ViewModel {
   }
 
   protected onInitialize(): void {
+    this.metaPlexModel.initialize();
     this.createReactions();
+  }
+
+  protected afterReactionsRemoved(): void {
+    this.metaPlexModel.end();
   }
 
   protected createReactions(): void {

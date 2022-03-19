@@ -58,8 +58,7 @@ export class SolanaModel extends Model {
     this.setUpProvider();
   }
 
-  protected onEnd() {
-    super.onEnd();
+  protected afterReactionsRemoved() {
     this._provider = null;
     this._connection = null;
   }
@@ -88,6 +87,32 @@ export class SolanaModel extends Model {
     if (!this._provider) this.setUpProvider();
 
     return this._provider as Provider;
+  }
+
+  public async confirmTransaction(
+    txId: string,
+    cb: null | ((msg: string) => void) = null,
+    maxTries: number = 10,
+    index = 0
+  ): Promise<boolean> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const msg = `~~~ confirming tx ${txId} attempt: ${index}`;
+        console.log(msg);
+        const confirmed = await this.connection.getConfirmedTransaction(txId, 'finalized');
+        if (cb) cb(msg);
+        if (!!confirmed && index <= maxTries) {
+          if (cb) cb(`~~~ tx ${txId} did not confirm`);
+          return resolve(this.confirmTransaction(txId, cb, maxTries, ++index));
+        } else {
+          if (cb) cb(`~~~ tx ${txId} confirmed? ${!!confirmed ? 'TRUE' : 'FALSE'}`);
+          return resolve(!!confirmed);
+        }
+      } catch (e: any) {
+        if (cb) cb(`~~~ error confirming tx ${txId} ${e.toString()}`);
+        reject(e);
+      }
+    });
   }
 
   public async getAssociatedTokenAccountForToken(
