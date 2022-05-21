@@ -6,6 +6,7 @@ import { injectable } from 'tsyringe';
 
 @injectable()
 export class DisplayNftImageListViewModel extends ViewModel {
+
   protected data: {
     images: Array<string>;
   } = { images: [] };
@@ -63,5 +64,8 @@ export class DisplayNftImageListViewModel extends ViewModel {
     runInAction(() => {
       this.data.images = newImageData;
     });
+  }
+
+  protected afterReactionsRemoved(): void {
   }
 }

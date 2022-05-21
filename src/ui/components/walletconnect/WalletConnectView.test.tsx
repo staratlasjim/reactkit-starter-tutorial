@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, act, fireEvent } from '@testing-library/react';
 import { WalletModel } from '../../../models/WalletModel/WalletModel';
-import { DependencyService } from '../../../services/injection/DependencyContext';
+import { DependencyService } from '../../../services/injection/DependencyService';
 import { MockWalletAdaptorService } from '../../../__mocks__/services/MockWalletAdaptor';
 import { WalletConnectView } from './WalletConnectView';
 

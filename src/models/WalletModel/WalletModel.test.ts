@@ -1,4 +1,4 @@
-import { DependencyService } from '../../services/injection/DependencyContext';
+import { DependencyService } from '../../services/injection/DependencyService';
 import { WalletModel } from './WalletModel';
 import {
   MockWalletAdaptor,

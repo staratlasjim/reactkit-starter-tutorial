@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { observer } from 'mobx-react-lite';
-import { useDependency } from '../../../services/injection/DependencyContext';
+import { useDependency } from '../../../services/injection/DependencyService';
 import { DI_KEYS } from '../../../core/Constants';
 import { Text } from '../../GlobalStyle.style';
 import { useViewModel } from '../../../viewmodels/useViewModel';

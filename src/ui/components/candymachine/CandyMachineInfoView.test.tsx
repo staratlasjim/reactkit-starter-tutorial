@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, render } from '@testing-library/react';
 import { WalletModel } from '../../../models/WalletModel/WalletModel';
-import { DependencyService, useDependency } from '../../../services/injection/DependencyContext';
+import { DependencyService, useDependency } from '../../../services/injection/DependencyService';
 import { MockWalletAdaptorService } from '../../../__mocks__/services/MockWalletAdaptor';
 import { MockCandyMachineModel } from '../../../__mocks__/models/candymachine/MockCandyMachineModel';
 import { CandyMachineModel } from '../../../models/CandyMachine/CandyMachineModel';

@@ -1,7 +1,7 @@
 import { Model } from '../Model';
 import { Provider, web3 } from '@project-serum/anchor';
 import { u64 } from '@solana/spl-token';
-import { DependencyService } from '../../services/injection/DependencyContext';
+import { DependencyService } from '../../services/injection/DependencyService';
 import { DI_KEYS } from '../../core/Constants';
 import {
   Blockhash,

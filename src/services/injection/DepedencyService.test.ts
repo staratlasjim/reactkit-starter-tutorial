@@ -1,4 +1,4 @@
-import { DependencyService } from './DependencyContext';
+import { DependencyService } from './DependencyService';
 import { injectable, singleton } from 'tsyringe';
 import { nanoid } from 'nanoid';
 

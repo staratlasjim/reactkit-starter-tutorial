@@ -1,6 +1,6 @@
 import { awaitReaction } from '../../core/ObservableReactionContainer';
 import { WalletModel } from '../WalletModel/WalletModel';
-import { DependencyService } from '../../services/injection/DependencyContext';
+import { DependencyService } from '../../services/injection/DependencyService';
 import { MockWalletAdaptorService } from '../../__mocks__/services/MockWalletAdaptor';
 import { SolanaModel } from './SolanaModel';
 

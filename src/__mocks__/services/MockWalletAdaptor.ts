@@ -12,7 +12,7 @@ import {
   Transaction,
   TransactionSignature,
 } from '@solana/web3.js';
-import { DependencyService } from '../../services/injection/DependencyContext';
+import { DependencyService } from '../../services/injection/DependencyService';
 import {
   IWalletAdaptorService,
   WalletAdaptorService,

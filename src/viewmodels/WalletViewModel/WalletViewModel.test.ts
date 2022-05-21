@@ -1,7 +1,7 @@
 import { getViewModelForTest } from '../../__test__/TestViewModelUtils';
 import { WalletViewModel } from './WalletViewModel';
 import { MockWalletAdaptorService } from '../../__mocks__/services/MockWalletAdaptor';
-import { DependencyService } from '../../services/injection/DependencyContext';
+import { DependencyService } from '../../services/injection/DependencyService';
 import { WalletModel } from '../../models/WalletModel/WalletModel';
 import { awaitReaction } from '../../core/ObservableReactionContainer';
 

@@ -8,7 +8,7 @@ import { action, computed, makeObservable, observable, runInAction } from 'mobx'
 import { SolanaModel, TokenAccountInfo } from '../Solana/SolanaModel';
 import { DI_KEYS } from '../../core/Constants';
 
-import { DependencyService } from '../../services/injection/DependencyContext';
+import { DependencyService } from '../../services/injection/DependencyService';
 import { isEmpty } from 'lodash';
 import { WalletModel } from '../WalletModel/WalletModel';
 

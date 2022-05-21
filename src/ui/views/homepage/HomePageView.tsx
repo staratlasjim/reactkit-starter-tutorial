@@ -19,8 +19,30 @@ import { CandyMachineCountDownTimerView } from '../../components/candy-machine-c
 import { DisplayNftImageListView } from '../DisplayNftImageListView/DisplayNftImageListView';
 import Link from 'next/link';
 import { MintNftView } from '../MintNft/MintNftView';
+import { useViewModel } from '../../../viewmodels/useViewModel';
+import { WalletViewModel } from '../../../viewmodels/WalletViewModel/WalletViewModel';
+import { useEffectOnce } from 'react-use';
+import { queueProcessor } from 'mobx-utils';
 
 export const HomePageView: FC = observer(() => {
+  const walletVM = useViewModel(WalletViewModel);
+  console.log('~~~ Wallet ID: ', walletVM.walletModel.id);
+
+  useEffectOnce(() => {
+    const stop = queueProcessor(
+      walletVM.notifications,
+      (notification) => {
+        console.log(
+          `~~~ Notification: ${notification.id}, ${notification.name} \n${notification.msg}`
+        );
+
+        return () => {
+          stop();
+        };
+      },
+      500
+    );
+  });
   return (
     <div>
       <Head>
@@ -39,6 +61,7 @@ export const HomePageView: FC = observer(() => {
             <HomePageHeaderSubText>
               <HomePageGradientText>NFT drop machine with fair mint</HomePageGradientText>
             </HomePageHeaderSubText>
+            <Link href={'/displayNft'}>Dipslay NFT Data</Link>
           </HomePageHeaderContainer>
           <HomeAuthCenterContainer>
             <AuthedContainer>

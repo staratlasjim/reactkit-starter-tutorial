@@ -9,7 +9,7 @@ import {
   IWalletAdaptorService,
   WalletAdaptorService,
 } from '../../../services/WalletAdaptorService/WalletAdaptorService';
-import { DependencyService } from '../../../services/injection/DependencyContext';
+import { DependencyService } from '../../../services/injection/DependencyService';
 import { MockWalletAdaptor, MockWalletAdaptorName } from '../../services/MockWalletAdaptor';
 import { injectable } from 'tsyringe';
 import { DI_KEYS } from '../../../core/Constants';

@@ -1,5 +1,5 @@
 import type { AppProps } from 'next/app';
-import DependencyContext, { DependencyService } from '../services/injection/DependencyContext';
+import DependencyService from '../services/injection/DependencyService';
 import { DI_KEYS } from '../core/Constants';
 
 import { enableStaticRendering } from 'mobx-react-lite';
@@ -17,9 +17,7 @@ DependencyService.registerValue(DI_KEYS.SOLANA_RPC_HOST, solanaRpcHost);
 
 function NftMeApp({ Component, pageProps }: AppProps) {
   return (
-    <DependencyContext.Provider value={DependencyService.container()}>
       <Component {...pageProps} />
-    </DependencyContext.Provider>
   );
 }
 
