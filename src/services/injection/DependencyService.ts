@@ -1,6 +1,5 @@
-import React, { useContext } from 'react';
 import '@abraham/reflection';
-import { get, hasIn, isFunction, isString, memoize } from 'lodash';
+import { get, hasIn, isFunction, isString, memoize, set } from 'lodash';
 import { container, DependencyContainer, InjectionToken, Lifecycle } from 'tsyringe';
 import constructor from 'tsyringe/dist/typings/types/constructor';
 import { GlobalContextService } from './GlobalContextService';
@@ -21,6 +20,15 @@ function getContainer(): DependencyContainer {
 const globalContainer = memoize(getContainer);
 
 const _container = globalContainer();
+
+function debugPrintContainer(): void {
+  const map = get(_container, '_registry._registryMap') as Map<any, any>;
+  map.forEach((value) => {
+    console.log('obj: ', get(value[0], 'instance'));
+  });
+}
+
+if (!GlobalContextService.Get().isSSR) set(window, '__RK_printContainer', debugPrintContainer);
 
 export class DependencyService {
   static registerValue<T extends unknown>(token: InjectionToken<T>, value: T): DependencyContainer {
