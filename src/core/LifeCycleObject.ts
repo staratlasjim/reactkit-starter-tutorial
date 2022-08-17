@@ -47,6 +47,10 @@ export abstract class LifeCycleObject {
     return !this._isSSR;
   }
 
+  get id(): string {
+    return this._id;
+  }
+
   protected abstract onInitialize(): void;
   protected abstract onEnd(): void;
 

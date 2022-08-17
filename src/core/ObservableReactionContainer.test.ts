@@ -28,6 +28,8 @@ describe('ObservableReactionContainer should work as expected', function () {
           )
         );
       }
+
+      protected afterReactionsRemoved() {}
     }
 
     const testRC = new TestReactionContainer();

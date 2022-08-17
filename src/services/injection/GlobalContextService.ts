@@ -5,6 +5,7 @@
  */
 import { nanoid } from 'nanoid';
 import { get, set, keys, hasIn } from 'lodash';
+import { boolean } from 'superstruct';
 
 export interface Injectable<T> {
   new (): T;
@@ -59,6 +60,14 @@ export class GlobalContextService implements Contextable {
     return GlobalContextService.instance;
   }
 
+  static SetDebug(val: boolean): void {
+    GlobalContextService.PutInGlobal('__RK_DEBUG', val);
+  }
+
+  static GetDebug(): boolean {
+    return GlobalContextService.FindInGlobal('__RK_DEBUG') ?? false;
+  }
+
   protected static Find<T>(key: string): T {
     const isWindowDefined = typeof window !== 'undefined';
     const isGlobalDefined = typeof global !== 'undefined';
@@ -108,4 +117,8 @@ export function FindOrCreateInGlobal<T extends Contextable>(
   const { FindInGlobal, PutInGlobal } = GlobalContextService;
   const instance = FindInGlobal<T>(key) ?? PutInGlobal(key, new creator());
   return instance;
+}
+
+export function GetDebug(): boolean {
+  return GlobalContextService.GetDebug();
 }

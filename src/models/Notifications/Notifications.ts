@@ -4,7 +4,7 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import { memoize, random } from 'lodash';
 import Chance from 'chance';
 import { singleton } from 'tsyringe';
-import { GlobalContextService } from '../../services/injection/GlobalContextService';
+import { GetDebug, GlobalContextService } from '../../services/injection/GlobalContextService';
 
 const chance = memoize(() => {
   return new Chance();
@@ -27,7 +27,8 @@ export class Notifications extends Model {
   protected onInitialize(): void {
     if (this.isSSR) return;
 
-    if (this.isCSR) console.log('\n\n\t~~~ Client side rendered\n\n');
+    if (this.isCSR && GlobalContextService.GetDebug())
+      console.log('\n\n\t~~~ Client side rendered\n\n');
 
     this.randomNotifier = setInterval(() => {
       this.addNotification(chance.name(), chance.paragraph());
@@ -46,7 +47,7 @@ export class Notifications extends Model {
   addNotification(name: string, message: string): void {
     const notification = new Notification();
     notification.setData(name, message);
-    console.log(`~~~ Notification ${name} just added`);
+    if (GetDebug()) console.log(`~~~ Notification ${name} just added`);
     this.notificationList.push(notification);
   }
 }

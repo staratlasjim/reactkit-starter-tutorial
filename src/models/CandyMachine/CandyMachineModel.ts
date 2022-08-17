@@ -105,7 +105,7 @@ export class CandyMachineModel extends Model implements ICandyMachineModel {
     });
   }
 
-  protected onEnd() {
+  protected afterReactionsRemoved(): void {
     super.onEnd();
     this.walletModel.end();
     this.solanaModel.end();

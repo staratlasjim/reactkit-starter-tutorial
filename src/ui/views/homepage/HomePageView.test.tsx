@@ -8,6 +8,7 @@ import { MockCandyMachineModel } from '../../../__mocks__/models/candymachine/Mo
 import { CandyMachineModel } from '../../../models/CandyMachine/CandyMachineModel';
 import { DI_KEYS } from '../../../core/Constants';
 import { CandyMachineCountDownTimerViewModel } from '../../../viewmodels/countdowntimer/CandyMachineCountDownTimerViewModel';
+import { set } from 'lodash';
 
 describe('HomePageView should work as expected', function () {
   beforeAll(() => {
@@ -17,6 +18,8 @@ describe('HomePageView should work as expected', function () {
     DependencyService.registerValue(DI_KEYS.CANDY_MACHINE_ID, 'TEST111');
     DependencyService.registerValue(DI_KEYS.SOLANA_NETWORK, 'devnet');
     DependencyService.registerValue(DI_KEYS.SOLANA_RPC_HOST, 'https://api.devnet.solana.com');
+
+    set(window, 'solana', {});
   });
   afterAll(() => {
     MockWalletAdaptorService.RestoreWalletAdaptorService();

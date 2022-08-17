@@ -53,7 +53,7 @@ export class DependencyService {
 
   static resolve<T extends unknown>(token: InjectionToken<T>): T {
     const t = _container.resolve(token);
-    if (hasIn(t, 'id')) {
+    if (GlobalContextService.GetDebug() && hasIn(t, 'id')) {
       const name = isString(token) ? token : token.toString().substring(0, 25);
       console.log(`~~~~ Resolving: ${name} with id: ${get(t, 'id')}`);
     }

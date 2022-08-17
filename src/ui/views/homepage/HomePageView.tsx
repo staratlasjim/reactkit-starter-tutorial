@@ -23,6 +23,7 @@ import { useViewModel } from '../../../viewmodels/useViewModel';
 import { WalletViewModel } from '../../../viewmodels/WalletViewModel/WalletViewModel';
 import { useEffectOnce } from 'react-use';
 import { queueProcessor } from 'mobx-utils';
+import { GetDebug } from '../../../services/injection/GlobalContextService';
 
 export const HomePageView: FC = observer(() => {
   const walletVM = useViewModel(WalletViewModel);
@@ -32,9 +33,10 @@ export const HomePageView: FC = observer(() => {
     const stop = queueProcessor(
       walletVM.notifications,
       (notification) => {
-        console.log(
-          `~~~ Notification: ${notification.id}, ${notification.name} \n${notification.msg}`
-        );
+        if (GetDebug())
+          console.log(
+            `~~~ Notification: ${notification.id}, ${notification.name} \n${notification.msg}`
+          );
 
         return () => {
           stop();

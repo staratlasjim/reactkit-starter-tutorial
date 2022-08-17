@@ -19,7 +19,10 @@ import { BN, Program } from '@project-serum/anchor';
 @injectable()
 export class MockCandyMachineModel extends CandyMachineModel implements ICandyMachineModel {
   static SetMockModel() {
-    DependencyService.registerValue(DI_KEYS.CANDY_MACHINE_ID, 'TEST111');
+    DependencyService.registerValue(
+      DI_KEYS.CANDY_MACHINE_ID,
+      'EcVyq4bUUyhrm2wRcYdScq34yKUiZCwg55XbVRD97WU4'
+    );
     DependencyService.registerAsSingleton(CandyMachineModel, MockCandyMachineModel);
   }
   static RestoreOriginalModel() {
@@ -43,7 +46,7 @@ export class MockCandyMachineModel extends CandyMachineModel implements ICandyMa
       this.goLiveDateTime = `${new Date(this.goLiveData * 1000).toUTCString()}`;
 
       this.candyMachineState = {
-        id: new PublicKey(this.candyMachineId),
+        id: new PublicKey('EcVyq4bUUyhrm2wRcYdScq34yKUiZCwg55XbVRD97WU4'),
         program: {} as Program,
         state: {
           itemsAvailable: this.itemsAvailable,
